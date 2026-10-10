@@ -82,10 +82,12 @@ respuesta → vaciar carrito → volver a cargar catálogo/stock
 - **Hashtags:** `#sqlite` `#ecommerce` `#catalogo` `#pedido` `#inventario`
   `#transaccion` `#api-rest` `#carrito-local`.
 
-**Microcanvas inicial acordado:** el cuarto canal verde muestra este esquema,
-con vistas `MAPA` y `TABLAS`, contador de tablas/relaciones y regla de negocio.
-En esta etapa los metadatos del widget son manuales y representativos; no lee la
-base SQLite del proyecto durante la ejecución.
+**Microcanvas inicial acordado:** el cuarto canal verde dibuja los nodos
+`products` y `orders` convergiendo en `order_items`; destaca PK/FK y expone
+valores iniciales de precio/stock de los cuatro productos del seed. `ENTIDADES`
+ofrece tarjetas de campos/llaves. Aunque los datos describen código comprobado,
+los metadatos del widget son manuales y representativos: no se consulta la base
+SQLite ni se comprueba el estado runtime durante la ejecución.
 
 ## 02 — Forma Studio
 
@@ -121,6 +123,13 @@ base SQLite del proyecto durante la ejecución.
   `PanelTop` o `Dialog` para modal; `Sparkles` para composición visual.
 - **Hashtags:** `#sitio-estatico` `#vistas` `#navegacion` `#history-api`
   `#dialog-nativo` `#contenido-fijo` `#sin-backend`.
+
+**Microcanvas de taxonomía:** el segundo canal (jerarquía) organiza el HTML de
+Mini Store como raíz → navegación, contenido, bolsa/checkout y pie. Distingue
+el catálogo recibido por API del carrito local y el checkout que envía el pedido.
+Es un sitemap semántico de esta página, no una tabla de rutas de React. El árbol
+puede crecer con desplazamiento dentro de la card; no modifica su ancho ni su
+alto exterior.
 
 ## 03 — Pulse Board
 
@@ -177,7 +186,9 @@ base SQLite del proyecto durante la ejecución.
    como etiquetas de dominio, nunca como fuente única de significado.
 6. El canvas debe caber en la card expandida de altura fija (320 px); si un
    grafo crece, permitir su navegación interna sin alterar el ancho exterior del
-   bloque ni la mecánica del timeline.
+   bloque ni la mecánica del timeline. La taxonomía organiza contenido por ramas;
+   el modelo relacional destaca cardinalidad, llaves y campos relevantes antes
+   que intentar reproducir un ERD convencional en miniatura.
 
 ## Fuentes revisadas
 

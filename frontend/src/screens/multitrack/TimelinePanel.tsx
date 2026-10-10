@@ -1,7 +1,9 @@
 import { AudioLines, Braces, Code2, Database, Layers3, Palette, Workflow } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
+import CodeAnatomyCanvas from "./CodeAnatomyCanvas";
 import DatabaseCanvas from "./DatabaseCanvas";
+import SiteTaxonomyCanvas from "./SiteTaxonomyCanvas";
 
 const tracks = [
   { color: "violet", icon: Code2 },
@@ -369,13 +371,19 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                         ) : (
                           <span className="multitrack-clip__expanded-label">
                             <track.icon size={13} aria-hidden="true" />
-                            {track.color === "lime" ? "DATOS · MODELO RELACIONAL" : `CANAL ${String(trackIndex + 1).padStart(2, "0")} · CANVAS`}
+                            {track.color === "lime"
+                              ? "DATOS · MODELO RELACIONAL"
+                              : track.color === "cyan"
+                                ? "VISTAS · TAXONOMÍA DEL SITIO"
+                                : `CANAL ${String(trackIndex + 1).padStart(2, "0")} · CANVAS`}
                             <span>CONTRAER −</span>
                           </span>
                         )}
                       </button>
-                      {isExpanded && track.color === "lime" && <DatabaseCanvas />}
-                      {isExpanded && track.color !== "lime" && (
+                      {isExpanded && track.color === "violet" && <CodeAnatomyCanvas projectId={projectId} />}
+                      {isExpanded && track.color === "lime" && <DatabaseCanvas projectId={projectId} />}
+                      {isExpanded && track.color === "cyan" && <SiteTaxonomyCanvas projectId={projectId} />}
+                      {isExpanded && !["violet", "lime", "cyan"].includes(track.color) && (
                         <div className="multitrack-clip__placeholder">
                           <span>CANVAS DE ANATOMÍA</span>
                           <strong>Widget de canal en preparación</strong>

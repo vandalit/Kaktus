@@ -174,6 +174,8 @@ que abre el Studio y no debe activarse al usar el retorno.
 
 - Ruta: `/workspaces/:workspaceId/projects/:projectId/studio/multipista`.
 - Mantiene rail y barra superior compartidos con IDE, conservando el proyecto.
+- El chip de identidad del proyecto en la barra Studio permite seleccionar otro
+  proyecto cargado y conserva la vista de Studio actual durante el cambio.
 - Preview y Directorio quedan colapsados a encabezados con icono y título para
   dar el espacio principal al timeline **Multipista**.
 - El timeline muestra seis canales placeholder sobre una grilla de nueve
@@ -191,10 +193,15 @@ que abre el Studio y no debe activarse al usar el retorno.
   bordes ajusta inicio o fin. Click/tap expande; el teclado ofrece movimiento y
   ajuste accesibles. Posición y longitud también se persisten por proyecto.
 - El cuarto canal verde presenta el canvas manual de base de datos de
-  `01-mini-store`: diagrama de las tres tablas y dos relaciones FK, alternable a
-  lista de tablas/campos. Es una reinterpretación de código revisado, no lectura
-  automática ni conexión runtime. La [auditoría de anatomía](./auditoria-anatomia-caseuses.md)
-  registra la evidencia y propuesta semántica para los tres case studies.
+  `01-mini-store`: composición de catálogo + pedidos hacia la tabla puente,
+  llaves, campos relevantes y visualización de precios/stock iniciales del seed;
+  alterna con tarjetas de entidades. El segundo canal (jerarquía) muestra el
+  sitemap taxonómico de la tienda y distingue API de almacenamiento local.
+  Ambos gráficos permiten navegación interior a medida que crezcan, sin cambiar
+  las dimensiones exteriores de la card. Son reinterpretaciones manuales, no
+  lectura automática ni conexión runtime. La
+  [auditoría de anatomía](./auditoria-anatomia-caseuses.md) registra evidencia y
+  propuesta semántica para los tres case studies.
 - El tema sólido es el predeterminado; se ofrece una variante cristalina opcional.
   Canales y lienzos son mock: no representan widgets reales ni reproducen o
   editan medios.

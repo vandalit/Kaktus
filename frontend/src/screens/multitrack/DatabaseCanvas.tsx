@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDown, ArrowRight, Database, KeyRound, Link2, TableProperties } from "lucide-react";
+import { ArrowDown, Database, KeyRound, Link2, TableProperties } from "lucide-react";
 
 type DatabaseView = "map" | "tables";
 
@@ -40,17 +40,21 @@ const formatPrice = new Intl.NumberFormat("es-CL", {
   maximumFractionDigits: 0
 });
 
-function DatabaseCanvas() {
+function DatabaseCanvas({ projectId }: { projectId: string }) {
   const [view, setView] = useState<DatabaseView>("map");
+  const isMiniStore = projectId === "01-mini-store";
+  const isPulseBoard = projectId === "03-pulse-board";
+  const title = isMiniStore ? "MODELO RELACIONAL" : isPulseBoard ? "MODELO LOCAL · TASK" : "SIN MODELO PERSISTENTE";
+  const projectName = isMiniStore ? "01-MINI-STORE / SQLITE" : isPulseBoard ? "03-PULSE-BOARD / NAVEGADOR" : "02-FORMA-STUDIO / DOM";
 
   return (
-    <section className="database-canvas" aria-label="Canvas del modelo de datos">
+    <section className={`database-canvas${isPulseBoard ? " is-pulse" : ""}${!isMiniStore && !isPulseBoard ? " is-static" : ""}`} aria-label="Canvas del modelo de datos">
       <header className="anatomy-canvas__header">
         <div className="anatomy-canvas__identity">
           <span className="anatomy-canvas__mark"><Database size={13} aria-hidden="true" /></span>
           <span>
-            <strong>MODELO RELACIONAL</strong>
-            <small>01-MINI-STORE / SQLITE</small>
+            <strong>{title}</strong>
+            <small>{projectName}</small>
           </span>
         </div>
         <div className="anatomy-canvas__views" role="group" aria-label="Vista del modelo de datos">
@@ -63,14 +67,24 @@ function DatabaseCanvas() {
         </div>
       </header>
 
-      <div className="anatomy-canvas__metrics" aria-label="Resumen del esquema">
-        <span><b>03</b> TABLAS</span>
-        <span><b>02</b> FK</span>
-        <span><b>04</b> SEEDS</span>
-        <span className="anatomy-canvas__source">MANUAL</span>
+      <div className="anatomy-canvas__metrics" aria-label="Resumen del modelo">
+        {isMiniStore ? (
+          <>
+            <span><b>03</b> TABLAS</span><span><b>02</b> FK</span><span><b>04</b> SEEDS</span>
+          </>
+        ) : isPulseBoard ? (
+          <>
+            <span><b>01</b> OBJETO</span><span><b>09</b> CAMPOS</span><span><b>03</b> ESTADOS</span>
+          </>
+        ) : (
+          <>
+            <span><b>04</b> VISTAS</span><span><b>03</b> CASOS</span><span><b>00</b> STORAGE</span>
+          </>
+        )}
+        <span className="anatomy-canvas__source">{isMiniStore ? "SQL" : isPulseBoard ? "LOCAL" : "ESTÁTICO"}</span>
       </div>
 
-      {view === "map" ? (
+      {isMiniStore && view === "map" ? (
         <div className="database-map">
           <div className="database-map__parents">
             <article className="database-entity database-entity--source">
@@ -109,14 +123,14 @@ function DatabaseCanvas() {
                 <div className="database-seed" key={product.name}>
                   <span>{product.name}</span>
                   <strong>{formatPrice.format(product.price)}</strong>
-                  <i style={{ "--stock-level": `${product.stock / 20 * 100}%` } as React.CSSProperties} />
+                  <progress value={product.stock} max={20} aria-label={`${product.stock} unidades de stock inicial`} />
                   <small>{product.stock} U. STOCK</small>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      ) : (
+      ) : isMiniStore ? (
         <div className="database-entities">
           {tables.map((table, index) => (
             <article className="database-entity-card" key={table.name}>
@@ -140,6 +154,34 @@ function DatabaseCanvas() {
           ))}
           <p className="database-entities__note">customer_name vive en orders; no existe una tabla customers.</p>
         </div>
+      ) : isPulseBoard ? (
+        <div className="local-model-map">
+          <article className="local-model-card">
+            <span>OBJETO / 07 SEEDS</span>
+            <strong><Database size={12} /> Task</strong>
+            <div>{["id", "title", "description", "status", "category", "priority", "due", "assignees[]", "mine"].map((field) => <i key={field}>{field}</i>)}</div>
+          </article>
+          <div className="local-model-flow"><span>FILTRA / AGRUPA</span><ArrowDown size={12} /></div>
+          <div className="local-model-states">
+            <span>TODO <b>03</b></span><span>DOING <b>02</b></span><span>DONE <b>02</b></span>
+          </div>
+          <div className="local-model-storage"><Database size={11} /> localStorage · pulse-board-tasks-v1</div>
+          <small>OBJETOS JSON EN NAVEGADOR · NO SON TABLAS SQL</small>
+        </div>
+      ) : (
+        <div className="local-model-map">
+          <article className="local-model-card local-model-card--static">
+            <span>DOM / ESTÁTICO</span>
+            <strong><LayoutPanelTopIcon /> Paneles de vista</strong>
+            <div>{["inicio", "estudio", "proyectos", "contacto"].map((viewName) => <i key={viewName}>{viewName}</i>)}</div>
+          </article>
+          <div className="local-model-flow"><span>CLICK → PROYECCIÓN</span><ArrowDown size={12} /></div>
+          <div className="local-model-states local-model-states--static">
+            <span>03 TARJETAS DE PROYECTO</span><span>1 DIALOG NATIVO</span>
+          </div>
+          <div className="local-model-storage"><Database size={11} /> Sin API · sin base · sin persistencia</div>
+          <small>EL CONTENIDO VIVE EN EL HTML / HASH DE NAVEGACIÓN</small>
+        </div>
       )}
 
       <footer className="anatomy-canvas__tags">
@@ -147,6 +189,10 @@ function DatabaseCanvas() {
       </footer>
     </section>
   );
+}
+
+function LayoutPanelTopIcon() {
+  return <TableProperties size={12} aria-hidden="true" />;
 }
 
 export default DatabaseCanvas;

@@ -116,10 +116,16 @@ workspace demo** hasta que haya un selector de origen funcional.
   contenido futuro; no incluye rejilla decorativa en su interior.
 - Cada canal se expande y contrae de forma independiente; varios pueden quedar
   abiertos simultáneamente. El estado expandido se guarda localmente por proyecto.
-- El cuarto canal (verde, icono de base de datos) aloja el primer microcanvas:
-  modelo manual de `01-mini-store` con vistas Mapa/Tablas, relaciones y regla
-  transaccional. Se identifica como maqueta; no se analiza ni conecta a SQLite
-  en vivo. El contenido cabe en la card y puede desplazarse por dentro si crece.
+- El cuarto canal (verde, icono de base de datos) aloja un microcanvas gráfico:
+  nodos de `products` y `orders` conectan a `order_items`; se resaltan llaves,
+  campos de negocio y los cuatro valores seed de precio/stock. La vista
+  alternativa muestra tarjetas de entidades. Es reinterpretación manual del
+  código; no se analiza ni conecta a SQLite en vivo.
+- El segundo canal (jerarquía) aloja el sitemap taxonómico de Mini Store:
+  navegación, contenido, bolsa/checkout y pie, con procedencia de los datos
+  indicada como API o estado local. Los dos canvas caben dentro de la card fija;
+  una anatomía más grande se recorre con scroll interno, sin redimensionar el
+  bloque exterior.
 - La barra del timeline ofrece acciones para expandir todas las pistas y
   comprimirlas todas; cada acción queda deshabilitada cuando ya no corresponde.
 - El cuerpo del bloque permite arrastrarlo horizontalmente con snap a columnas;
