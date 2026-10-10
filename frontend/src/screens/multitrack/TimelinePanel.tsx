@@ -1,8 +1,10 @@
-import { AudioLines, Braces, Code2, Database, Layers3, Palette, Workflow } from "lucide-react";
+import { AudioLines, Braces, Code2, Database, Layers3, Maximize2, Minimize2, Paintbrush, Palette, Workflow } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import CodeAnatomyCanvas from "./CodeAnatomyCanvas";
 import DatabaseCanvas from "./DatabaseCanvas";
+import DesignSystemCanvas from "./DesignSystemCanvas";
+import LayersCanvas from "./LayersCanvas";
 import SiteTaxonomyCanvas from "./SiteTaxonomyCanvas";
 
 const tracks = [
@@ -291,18 +293,22 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
           <button
             className="multitrack-timeline__action"
             type="button"
+            aria-label="Expandir todas las pistas"
+            title="Expandir todas las pistas"
             disabled={expandedTracks.size === tracks.length}
             onClick={() => setAllTracksExpanded(true)}
           >
-            Expandir todo
+            <Maximize2 size={13} aria-hidden="true" /><span>Expandir todo</span>
           </button>
           <button
             className="multitrack-timeline__action"
             type="button"
+            aria-label="Comprimir todas las pistas"
+            title="Comprimir todas las pistas"
             disabled={expandedTracks.size === 0}
             onClick={() => setAllTracksExpanded(false)}
           >
-            Comprimir todo
+            <Minimize2 size={13} aria-hidden="true" /><span>Comprimir todo</span>
           </button>
           <button
             className="multitrack-timeline__theme-toggle"
@@ -311,7 +317,8 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
             aria-label={`Cambiar estilo a ${glassTheme ? "sólido" : "cristal"}`}
             onClick={onToggleGlass}
           >
-            {glassTheme ? "ESTILO · CRISTAL" : "ESTILO · SÓLIDO"}
+            <Paintbrush size={13} aria-hidden="true" />
+            <span>{glassTheme ? "ESTILO · CRISTAL" : "ESTILO · SÓLIDO"}</span>
           </button>
         </div>
       </header>
@@ -375,6 +382,10 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                               ? "DATOS · MODELO RELACIONAL"
                               : track.color === "cyan"
                                 ? "VISTAS · TAXONOMÍA DEL SITIO"
+                                : track.color === "coral"
+                                  ? "ESTILO · BRAND KIT"
+                                  : track.color === "amber"
+                                    ? "LAYERS · VISTAS Y ENTIDADES"
                                 : `CANAL ${String(trackIndex + 1).padStart(2, "0")} · CANVAS`}
                             <span>CONTRAER −</span>
                           </span>
@@ -383,7 +394,9 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                       {isExpanded && track.color === "violet" && <CodeAnatomyCanvas projectId={projectId} />}
                       {isExpanded && track.color === "lime" && <DatabaseCanvas projectId={projectId} />}
                       {isExpanded && track.color === "cyan" && <SiteTaxonomyCanvas projectId={projectId} />}
-                      {isExpanded && !["violet", "lime", "cyan"].includes(track.color) && (
+                      {isExpanded && track.color === "coral" && <DesignSystemCanvas projectId={projectId} key={projectId} />}
+                      {isExpanded && track.color === "amber" && <LayersCanvas projectId={projectId} key={projectId} />}
+                      {isExpanded && !["violet", "lime", "cyan", "coral", "amber"].includes(track.color) && (
                         <div className="multitrack-clip__placeholder">
                           <span>CANVAS DE ANATOMÍA</span>
                           <strong>Widget de canal en preparación</strong>

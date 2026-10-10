@@ -190,6 +190,34 @@ alto exterior.
    el modelo relacional destaca cardinalidad, llaves y campos relevantes antes
    que intentar reproducir un ERD convencional en miniatura.
 
+## Capas de producto e inspector Layers
+
+El canal **Layers** separa dos inspecciones: superficies de producto (páginas,
+secciones y overlays) y estructuras de datos (entidades, colecciones y
+persistencia). Las tarjetas son mapas manuales; sus selectores solo cambian el
+foco del microcanvas y no editan el código de los demos.
+
+- **Mini Store:** `frontend/index.html` contiene una sola página con portada y
+  `#product-grid`. El catálogo se genera desde `GET /api/products` como grilla
+  Bootstrap (`.row` + tarjetas), no como carrusel. La bolsa es un Bootstrap
+  Offcanvas (`#cartPanel`) con líneas y formulario de checkout; este envía
+  `POST /api/orders`. El stack de entidades muestra `products`, `orders` y
+  `order_items`; el producto es el nodo central.
+- **Forma Studio:** Inicio, Estudio, Proyectos y Contacto son paneles dentro de
+  un mismo HTML, activados por `data-view-panel` y hash. La vista Proyectos
+  contiene tarjetas `data-project` que abren un diálogo nativo. Las tarjetas
+  con `data-project` y `data-description` son contenido del markup, no registros
+  de una base de datos ni un seeder JS.
+- **Pulse Board:** Resumen, Mi tablero y Actividad son estados de navegación
+  locales; no tienen rutas independientes. El tablero contiene tres columnas
+  de tareas. `Task[]` se guarda en `localStorage`; los estados `todo`, `doing`
+  y `done` son valores del modelo, no tablas.
+
+La guía de estilo del canal coral sigue el mismo criterio: colores extraídos de
+las hojas CSS de cada demo, tipografías declaradas y chips de tokens
+seleccionables de forma ilustrativa. Los controles no aplican cambios al
+proyecto observado.
+
 ## Fuentes revisadas
 
 - `CaseUses/01-mini-store/frontend/app.js`,

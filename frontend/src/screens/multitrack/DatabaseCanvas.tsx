@@ -196,13 +196,13 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
           </article>
 
           <div className="database-seeds">
-            <div className="database-seeds__heading"><span>VALORES INICIALES / products</span><span>SEED EN CÓDIGO</span></div>
+            <div className="database-seeds__heading"><span>STOCK DISPONIBLE / products</span><span>TRAS PEDIDOS DEMO</span></div>
             <div className="database-seeds__grid">
               {productSeeds.map((product) => (
                 <div className="database-seed" key={product.name}>
                   <span>{product.name}</span>
                   <strong>{formatPrice.format(product.price)}</strong>
-                  <progress value={product.stock} max={20} aria-label={`${product.stock} unidades de stock inicial`} />
+                  <progress value={product.stock} max={20} aria-label={`${product.stock} unidades disponibles`} />
                   <small>{product.stock} U. STOCK</small>
                 </div>
               ))}
