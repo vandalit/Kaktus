@@ -121,9 +121,11 @@ indisponibilidad; no se conecta a un asistente.
 - **Multitrack panels:** Preview y Directorio se reducen a encabezados; el panel
   Multipista concentra seis canales mock en una grilla abstracta de nueve columnas,
   sin timestamps. Cada canal tiene un bloque sólido de longitud inicial de tres
-  columnas; el acordeón lo expande únicamente en vertical, conserva esa longitud
-  y revela una card vacía de altura fija independiente del ancho, sin rejilla
-  decorativa interior. El tema
+  columnas; cada bloque se expande independientemente, conserva su ancho y revela
+  una card de altura fija de 320 px. El cuarto canal contiene un microcanvas
+  manual del modelo de datos de `01-mini-store` (tres tablas, relaciones y
+  visualización alternativa de campos); no parsea el proyecto ni lee SQLite
+  durante la ejecución. Los canales restantes conservan un placeholder. El tema
   sólido es inicial y el cristal opcional; la longitud se ajusta horizontalmente
   y la posición se mueve por columnas mediante handlers separados; ambas se
   persisten localmente por proyecto. No hay edición de medios.

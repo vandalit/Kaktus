@@ -116,6 +116,10 @@ workspace demo** hasta que haya un selector de origen funcional.
   contenido futuro; no incluye rejilla decorativa en su interior.
 - Cada canal se expande y contrae de forma independiente; varios pueden quedar
   abiertos simultáneamente. El estado expandido se guarda localmente por proyecto.
+- El cuarto canal (verde, icono de base de datos) aloja el primer microcanvas:
+  modelo manual de `01-mini-store` con vistas Mapa/Tablas, relaciones y regla
+  transaccional. Se identifica como maqueta; no se analiza ni conecta a SQLite
+  en vivo. El contenido cabe en la card y puede desplazarse por dentro si crece.
 - La barra del timeline ofrece acciones para expandir todas las pistas y
   comprimirlas todas; cada acción queda deshabilitada cuando ya no corresponde.
 - El cuerpo del bloque permite arrastrarlo horizontalmente con snap a columnas;

@@ -14,6 +14,7 @@ Product structure and UX contracts:
 - [Navigation and screens](./docs/product/navegacion-y-pantallas.md)
 - [Product logic](./docs/product/logica-del-producto.md)
 - [Taxonomy, views, and data audit](./docs/product/auditoria-taxonomia-y-datos.md)
+- [Case-study software anatomy audit](./docs/product/auditoria-anatomia-caseuses.md)
 - [Frontend conventions](./docs/product/convenciones-frontend.md)
 - [SQLite data model](./docs/data/modelo-de-datos.md)
 - [SQLite and backend roadmap](./docs/roadmap/sqlite-y-backend.md)

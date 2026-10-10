@@ -339,9 +339,14 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
               <div className="studio-shell">
                 <StudioNavigationBar
                   project={selectedProject}
+                  projects={projects}
                   activeView={studioView}
                   onBack={() => onBackToProject(selectedProject)}
                   onChangeView={(view) => selectStudioView(selectedProject, view)}
+                  onSwitchProject={(nextProjectId) => {
+                    const nextProject = projects.find((project) => project.id === nextProjectId);
+                    if (nextProject) selectStudioView(nextProject, studioView);
+                  }}
                 />
                 <div className="studio-shell__view">
                   {studioView === "ide"

@@ -190,6 +190,11 @@ que abre el Studio y no debe activarse al usar el retorno.
   Arrastrar el cuerpo mueve horizontalmente con snap a columnas; arrastrar los
   bordes ajusta inicio o fin. Click/tap expande; el teclado ofrece movimiento y
   ajuste accesibles. Posición y longitud también se persisten por proyecto.
+- El cuarto canal verde presenta el canvas manual de base de datos de
+  `01-mini-store`: diagrama de las tres tablas y dos relaciones FK, alternable a
+  lista de tablas/campos. Es una reinterpretación de código revisado, no lectura
+  automática ni conexión runtime. La [auditoría de anatomía](./auditoria-anatomia-caseuses.md)
+  registra la evidencia y propuesta semántica para los tres case studies.
 - El tema sólido es el predeterminado; se ofrece una variante cristalina opcional.
   Canales y lienzos son mock: no representan widgets reales ni reproducen o
   editan medios.

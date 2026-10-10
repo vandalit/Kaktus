@@ -1,6 +1,7 @@
 import { AudioLines, Braces, Code2, Database, Layers3, Palette, Workflow } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
+import DatabaseCanvas from "./DatabaseCanvas";
 
 const tracks = [
   { color: "violet", icon: Code2 },
@@ -363,10 +364,24 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                           toggleTrack(track.color);
                         }}
                       >
-                        {!isExpanded && (
+                        {!isExpanded ? (
                           <track.icon className="multitrack-clip__icon" size={22} aria-hidden="true" />
+                        ) : (
+                          <span className="multitrack-clip__expanded-label">
+                            <track.icon size={13} aria-hidden="true" />
+                            {track.color === "lime" ? "DATOS · MODELO RELACIONAL" : `CANAL ${String(trackIndex + 1).padStart(2, "0")} · CANVAS`}
+                            <span>CONTRAER −</span>
+                          </span>
                         )}
                       </button>
+                      {isExpanded && track.color === "lime" && <DatabaseCanvas />}
+                      {isExpanded && track.color !== "lime" && (
+                        <div className="multitrack-clip__placeholder">
+                          <span>CANVAS DE ANATOMÍA</span>
+                          <strong>Widget de canal en preparación</strong>
+                          <small>La estructura y la lógica se definirán por proyecto.</small>
+                        </div>
+                      )}
                       <button
                         className="multitrack-clip__edge multitrack-clip__edge--start"
                         type="button"
