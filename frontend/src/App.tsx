@@ -54,6 +54,9 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   const [copied, setCopied] = useState(false);
   const [sortNewest, setSortNewest] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const projectGridRef = useRef<HTMLDivElement>(null);
+  const projectsSectionRef = useRef<HTMLElement>(null);
+  const returnToGridRef = useRef(false);
 
   async function loadProjects() {
     setLoading(true);
@@ -76,8 +79,20 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [projectId, studioView]);
+    if (projectId) {
+      returnToGridRef.current = true;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (returnToGridRef.current && !loading) {
+      const target = projectGridRef.current ?? projectsSectionRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      returnToGridRef.current = false;
+    } else if (!returnToGridRef.current) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [projectId, studioView, loading]);
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
@@ -236,7 +251,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
             </button>
           </section>
 
-          <section className="projects-section">
+          <section className="projects-section" ref={projectsSectionRef}>
             <div className="section-heading">
               <div><div className="section-kicker">TU ESPACIO DE TRABAJO</div><h2>Proyectos <span className="heading-count">{loading ? "…" : projects.length}</span></h2></div>
               <div className="section-actions">
@@ -253,7 +268,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
             )}
 
             {!loading && !error && visibleProjects.length > 0 && (
-              <div className="project-grid">
+              <div className="project-grid" ref={projectGridRef}>
                 {visibleProjects.map((project, index) => {
                   const accent = accents[index % accents.length];
                   const isFlipped = flipped.includes(project.id);

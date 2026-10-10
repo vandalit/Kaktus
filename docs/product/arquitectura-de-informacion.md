@@ -41,7 +41,7 @@ Kaktus
         └── Proyectos
             ├── Dashboard del workspace
             │   ├── Vista: Proyectos
-            │   └── Vista: En construcción
+            │   └── Vista: Consola
             └── Proyecto enfocado
                 ├── Resumen de proyecto
                 └── Studio
@@ -51,10 +51,11 @@ Kaktus
 ```
 
 Las perspectivas del dashboard y del Studio pertenecen a contextos distintos.
-Las opciones futuras pueden compartir el rótulo **En construcción**, pero sus
-IDs deben ser propios de cada contexto. El resumen del proyecto y el Studio son
-destinos distintos: desde el resumen se entra al Studio y desde el IDE se
-regresa al mismo resumen.
+El dashboard ofrece Proyectos y Consola; el Studio ofrece IDE y Multipista, con
+una tercera perspectiva bloqueada. Las opciones futuras pueden compartir el
+rótulo **En construcción**, pero sus IDs deben ser propios de cada contexto. El
+resumen del proyecto y el Studio son destinos distintos: desde el resumen se
+entra al Studio y desde el IDE se regresa al mismo resumen.
 
 ## Jerarquía de información por contexto
 
@@ -96,11 +97,12 @@ una selección real. La acción de demo es una ruta explícita alternativa.
 
 ### Vista multipista del Studio
 
-1. Panel superior de preview.
-2. Panel superior de directorio/recursos.
-3. Timeline inferior ancho completo con encabezados y filas de pista.
-4. Bloques de color como placeholders; reproducción y edición de medios no
-   están conectadas.
+1. Panel superior de preview, vacío salvo marco, icono y título.
+2. Panel superior de directorio/recursos, vacío salvo marco, icono y título.
+3. Panel inferior ancho completo titulado **Multipista**, con retícula, filas y
+   bloques de color como placeholders.
+4. Sin timestamps, etiquetas descriptivas, filtros o controles; reproducción y
+   edición de medios no están conectadas.
 
 ## Hechos, inferencias y simulaciones
 

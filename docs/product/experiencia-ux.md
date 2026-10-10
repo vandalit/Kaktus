@@ -69,6 +69,8 @@ workspace demo** hasta que haya un selector de origen funcional.
 ### Resumen de proyecto
 
 - El detalle comunica identidad, datos locales e inferencias/mock.
+- Un CTA ancho y la identidad del encabezado regresan al dashboard; el botón
+  **Editar proyecto** queda aislado como acción independiente.
 - **Editar proyecto** abre el Studio del mismo proyecto, no cambia a otra vista
   del dashboard.
 - El retorno del Studio vuelve primero al resumen.
@@ -88,9 +90,9 @@ workspace demo** hasta que haya un selector de origen funcional.
 
 ### Studio / Multipista
 
-- Mostrar dos paneles superiores: preview y directorio/recursos; debajo, un
-  timeline ancho con cabecera de tiempo/columnas y filas bento diferenciadas por
-  color.
+- Mostrar dos paneles superiores vacíos con icono y título; debajo, un panel
+  **Multipista** con retícula, filas y bloques de color como estructura mínima.
+- Omitir timestamps, metadatos de pistas, filtros, controles y texto ornamental.
 - Todo el contenido es un skeleton mock sin reproducción ni edición de medios.
 - Ocultar las barras de scroll del viewport del editor/timeline sin deshabilitar
   el scroll de touchpad o gestos táctiles.

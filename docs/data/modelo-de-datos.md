@@ -180,9 +180,12 @@ activa y los defaults permanecen en el código.
    workspace activo?
 2. ¿Hace falta historial de escaneos o solo reemplazar el último índice?
 3. ¿Se necesita indexar todos los archivos o leer el árbol bajo demanda?
-4. ¿Debe persistirse la preferencia de vista o solo representarse en la URL?
+4. ¿Debe persistirse la vista preferida o solo representarse en la URL? Si se
+   persiste, ¿la preferencia del Studio es global al workspace o por proyecto?
 5. ¿Qué datos se consideran privados y cómo se elimina un origen de forma
    completa?
+6. ¿Cómo se conserva la identidad de un proyecto al renombrar/mover su carpeta,
+   eliminarla y volver a crearla en la misma ruta, o reemplazar el origen?
 
 Hasta responderlas, conservar el esquema como propuesta y no crear migraciones
 ni archivos de base de datos.

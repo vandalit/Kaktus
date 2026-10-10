@@ -104,8 +104,9 @@ indisponibilidad; no se conecta a un asistente.
   persistencia/ejecución de cambios.
 - **Studio navigation:** barra compartida del Studio con contexto y selector de
   vistas; el rail lateral del workspace se compacta.
-- **Multitrack panels:** preview, directorio y timeline como componentes
-  independientes; por ahora son un skeleton visual.
+- **Multitrack panels:** preview y directorio vacíos con icono/título, más un
+  panel Multipista con retícula y filas coloreadas; cada panel es independiente
+  y la vista permanece como skeleton visual.
 - **Banner de estado/fuente:** hace explícito el nivel de realidad.
 - **Componentes de dominio:** tarjeta de proyecto, nodo, item de archivo,
   explorador, editor, terminal y chat.

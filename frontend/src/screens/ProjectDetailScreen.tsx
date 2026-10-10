@@ -12,6 +12,7 @@ import {
   Radio,
   ShieldCheck
 } from "lucide-react";
+import type { KeyboardEvent } from "react";
 import type { Project } from "../types";
 import StatusBanner from "../components/StatusBanner";
 
@@ -43,18 +44,37 @@ function ProjectDetailScreen({ project, onBack, onEdit }: ProjectDetailScreenPro
       </header>
 
       <div className="project-detail__content">
+        <button className="project-dashboard-cta" type="button" onClick={onBack}>
+          <ArrowLeft size={16} />
+          <span>Volver al dashboard</span>
+          <ArrowRight size={16} />
+        </button>
         <StatusBanner tone="info" label="RESUMEN LOCAL">
           Descripción, tipo, stack y conteos provienen del análisis local de <code>CaseUses/{project.id}/</code>.
           La clasificación tecnológica es aproximada.
         </StatusBanner>
 
         <section className="project-hero">
-          <div className="project-hero__identity">
-            <div className="project-hero__mark" aria-hidden="true">{project.title.slice(0, 1).toLocaleUpperCase("es")}</div>
-            <div className="project-hero__copy">
-              <div className="project-hero__eyebrow"><span className="project-live-dot" /> {project.projectType} <span>/</span> {project.id}</div>
-              <h1 id="project-detail-title">{project.title}</h1>
-              <p>{project.description}</p>
+          <div
+            className="project-hero__identity-link"
+            role="button"
+            tabIndex={0}
+            aria-label="Volver al dashboard de proyectos"
+            onClick={onBack}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onBack();
+              }
+            }}
+          >
+            <div className="project-hero__identity">
+              <div className="project-hero__mark" aria-hidden="true">{project.title.slice(0, 1).toLocaleUpperCase("es")}</div>
+              <div className="project-hero__copy">
+                <div className="project-hero__eyebrow"><span className="project-live-dot" /> {project.projectType} <span>/</span> {project.id}</div>
+                <h1 id="project-detail-title">{project.title}</h1>
+                <p>{project.description}</p>
+              </div>
             </div>
           </div>
           <button className="project-edit-button" type="button" onClick={onEdit}>

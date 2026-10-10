@@ -35,7 +35,7 @@ Ejemplos:
 ```text
 /
 /workspaces/demo/dashboard/projects
-/workspaces/demo/dashboard/overview-preview
+/workspaces/demo/dashboard/console
 /workspaces/demo/projects/01-mini-store
 /workspaces/demo/projects/01-mini-store/studio/ide
 /workspaces/demo/projects/01-mini-store/studio/multipista
@@ -127,8 +127,9 @@ workspace que Kaktus ya puede leer.
 
 La pantalla de resumen está maquetada dentro del canvas y mantiene el sidebar.
 Expone descripción, métricas de archivos y stack local, además de
-monitores/conexiones mock. **Editar proyecto** es la transición explícita al
-Studio; no afirma que ya se puedan guardar cambios.
+monitores/conexiones mock. Un CTA ancho al inicio y la zona de identidad del
+encabezado regresan al dashboard; **Editar proyecto** es una acción separada
+que abre el Studio y no debe activarse al usar el retorno.
 
 ### P3 — Studio / IDE
 
@@ -154,8 +155,11 @@ Studio; no afirma que ya se puedan guardar cambios.
 - Mantiene rail y barra superior compartidos con IDE, conservando el proyecto.
 - Skeleton modular con preview y directorio en la zona superior, y timeline
   multipista a ancho completo abajo.
-- El timeline presenta encabezados de tiempo/columnas, filas y bloques de color
-  en layout bento. Está marcado como maqueta; no reproduce ni edita medios.
+- Preview y directorio conservan solo marco, icono y título; su interior queda
+  vacío en esta etapa.
+- El panel inferior conserva el título **Multipista**, una retícula de columnas,
+  filas y bloques de color. No muestra timestamps, nombres/tipos de pistas,
+  filtros ni controles. Es un esqueleto visual; no reproduce ni edita medios.
 - La tercera posición del selector sigue bloqueada, con tooltip explicativo.
 - Los scrollbars del editor y timeline se ocultan visualmente, conservando
   desplazamiento por rueda, touchpad y gesto táctil.

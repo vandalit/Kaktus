@@ -202,7 +202,7 @@ abrir una vista de proyecto. El contenido de dashboard permanece concentrado en
   flip intacto, sidebar persistente, topbar oculta, CTA informativo y vista
   estrecha sin overflow horizontal.
 - `npm --prefix frontend run build` y `git diff --check` pasan. No se modificó
-  backend.
+backend.
 
 ### Avance frontend: modos del dashboard
 
@@ -277,6 +277,17 @@ abrir una vista de proyecto. El contenido de dashboard permanece concentrado en
   admite scroll horizontal/vertical programático con barras ocultas; timeline
   muestra su ruler alineado, paneles y filas sin overflow horizontal del canvas.
 - `npm --prefix frontend run build` y `git diff --check` pasan.
+
+### Simplificación del detalle y la vista Multipista
+
+- El resumen de proyecto incorpora un CTA ancho de retorno al dashboard y hace
+  clickeable la zona de identidad del encabezado; `Editar proyecto` conserva su
+  acción independiente.
+- La vista Multipista conserva los marcos vacíos de Preview y Directorio con
+  sus iconos/títulos. El panel inferior mantiene título, retícula, filas y
+  bloques de color, sin timestamps, etiquetas de pista, filtros ni controles.
+- Se actualizaron los contratos de arquitectura de información, UX,
+  navegación y la bitácora. El backend no se modificó.
 
 ## Cómo ejecutar localmente
 
