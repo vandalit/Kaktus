@@ -1,7 +1,8 @@
 # Modelo de datos y persistencia local
 
-**Estado:** esquema inicial implementado por migración; todavía no hay escaneos,
-preferencias ni endpoints que lean/escriban metadata persistida.
+**Estado:** esquema inicial, workspace `CaseUses/` y escaneo inicial a SQLite
+implementados; preferencias y endpoints que lean/escriban metadata persistida
+siguen pendientes.
 
 ## Decisiones de arquitectura
 
@@ -52,8 +53,9 @@ componentes.
 
 ## Tablas
 
-Tipos SQL expresados para SQLite. Fechas en UTC ISO-8601; claves UUID como
-`TEXT`. Activar `PRAGMA foreign_keys = ON` en cada conexión.
+Tipos SQL expresados para SQLite. Fechas en UTC ISO-8601; las identidades son
+`TEXT` (UUID para proyectos y snapshots; IDs reservados para el workspace y la
+raíz demo). Activar `PRAGMA foreign_keys = ON` en cada conexión.
 
 ### `workspaces`
 
@@ -118,11 +120,13 @@ a UUID.
 | `description` | TEXT | Nullable, resumen observado |
 | `detected_type` | TEXT | Nullable, clasificación inferida |
 | `detector_version` | TEXT | Nullable, versión de reglas |
-| `error_message` | TEXT | Nullable, sanitizado; no guardar secretos |
+| `error_message` | TEXT | Nullable, sanitizado y sin rutas absolutas |
 
 Índice sugerido: `(project_id, completed_at DESC)`. Las vistas usan el snapshot
 completo más reciente; si el escaneo más reciente falla, el anterior completo
-continúa disponible, con el error del intento mostrado separadamente.
+continúa disponible, con el error del intento mostrado separadamente. Los
+errores persistidos son mensajes generales por categoría; no se guardan stacks
+ni rutas locales que puedan venir de errores del sistema operativo.
 
 ### `project_technologies`
 

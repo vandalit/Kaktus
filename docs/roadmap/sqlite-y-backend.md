@@ -47,14 +47,14 @@ equivalen a validar un instalador Windows.
 - Cobertura de resolución de data dir Linux/Windows, migración repetida,
   constraints y rollback de una migración fallida.
 
-**Verificación:** `npm run test:backend` (4 pruebas) y `node --check` pasan en
+**Verificación:** `npm run test:backend` (7 pruebas) y `node --check` pasan en
 Linux/WSL.
 
-### 2. Añadir repositorios y escaneo transaccional — siguiente paso
+### 2. Añadir workspace demo y escaneo transaccional — completada
 
-- Separar acceso SQL de reglas filesystem: repositorio para workspaces,
-  proyectos y preferencias; servicio de escaneo reutiliza y extrae las reglas
-  actuales de `server.js`.
+- Separar el recorrido filesystem (`backend/scanner.js`) de la inicialización y
+  persistencia transaccional (`backend/workspace.js`); conservar las reglas de
+  análisis que ya usaba `server.js`.
 - Inicializar workspace y raíz demo al primer arranque.
 - Crear snapshot con conteos, clasificación, tecnologías y metadatos de árbol;
   excluir directorios ignorados, symlinks y contenido de archivos.
@@ -67,11 +67,17 @@ Linux/WSL.
 - Mantener `CaseUses/` como única raíz MVP; abstraer la raíz para habilitar
   directorios de repositorios elegidos después, sin abrir selector arbitrario
   en esta etapa.
+- El primer arranque crea el workspace y la raíz demo, y guarda un snapshot si
+  todavía no existe uno completo. Los GET existentes siguen leyendo el
+  filesystem; esta etapa no cambia el contrato HTTP.
 
 **Pruebas:** snapshot reproducible, fallo a mitad de recorrido, preservación de
 último snapshot exitoso, raíz ausente/inaccesible, ruta ignorada y symlink.
 
-### 3. Exponer API local de lectura y preferencias
+**Verificación:** 7 pruebas backend pasan; startup crea SQLite, inicializa el
+workspace demo y conserva los endpoints de lectura actuales.
+
+### 3. Exponer API local de lectura y preferencias — siguiente paso
 
 - Mantener `GET /api/health`, `GET /api/projects`,
   `GET /api/projects/:id/tree` y `GET /api/projects/:id/file?path=...` durante
@@ -199,6 +205,7 @@ Después de cerrar el MVP local:
 ## Siguiente paso inmediato
 
 Implementar únicamente la etapa 2: seed demo y servicio de escaneo transaccional
-en tests sobre una carpeta temporal; no cambiar todavía endpoints existentes ni
-el frontend. Luego verificar snapshots correctos, errores y preservación del
-último escaneo válido antes de exponer esos datos por HTTP.
+Implementar la etapa 3: endpoints de lectura basados en el índice y preferencias
+persistentes, manteniendo la lectura del contenido de archivos directamente
+desde el filesystem. Antes de migrar listado/árbol a SQLite, definir el contrato
+HTTP y probarlo sin conectar todavía el frontend.

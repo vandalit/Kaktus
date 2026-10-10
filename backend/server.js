@@ -2,6 +2,7 @@ const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
 const { openDatabase } = require("./database");
+const { bootstrapDemoWorkspace } = require("./workspace");
 
 const projectRoot = path.resolve(__dirname, "..");
 const casesDirectory = path.join(projectRoot, "CaseUses");
@@ -286,8 +287,22 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`API local de Kaktus disponible en http://127.0.0.1:${port} (SQLite inicializada).`);
+async function startServer() {
+  const workspace = await bootstrapDemoWorkspace(database, casesDirectory);
+  if (workspace.scan?.failedProjects.length) {
+    console.error(
+      `El escaneo inicial no pudo completarse para: ${workspace.scan.failedProjects.join(", ")}.`
+    );
+  }
+  server.listen(port, "127.0.0.1", () => {
+    console.log(`API local de Kaktus disponible en http://127.0.0.1:${port} (SQLite inicializada).`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("No se pudo inicializar el workspace demo de Kaktus:", error);
+  database.close();
+  process.exitCode = 1;
 });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
