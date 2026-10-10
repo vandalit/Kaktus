@@ -1,7 +1,9 @@
 # Experiencia UX
 
-**Estado:** contrato UX de las vistas maquetadas; la persistencia se incorporará
-sin alterar la jerarquía.
+**Estado:** contrato aplicado al recorrido demo; persistencia local conectada.
+La generalización de rutas/raíces y los estados de navegación pendientes están
+listados en la
+[auditoría de taxonomía y datos](./auditoria-taxonomia-y-datos.md).
 
 ## Principios
 
@@ -49,11 +51,15 @@ workspace demo** hasta que haya un selector de origen funcional.
 
 ### Onboarding
 
-- Las tarjetas de carpeta local y repositorio remoto comunican el destino
-  previsto, pero muestran estado **Prototipo / no conectado**.
-- El botón primario para esta fase es **Continuar con workspace demo**.
-- Tras activarlo se carga la raíz real `CaseUses/`; el banner informa que se
-  trata de datos locales de demostración.
+- La tarjeta de carpeta local abre el explorador integrado de Kaktus, no un
+  modal del navegador ni un selector nativo.
+- El explorador obtiene la lista de carpetas/archivos reales y la jerarquía de
+  ubicación desde la API local. La ubicación de raíz está bloqueada a
+  `CaseUses/`, pero la navegación dentro de esa raíz puede inspeccionarse.
+- El control **Aceptar y continuar** confirma únicamente el workspace demo y
+  navega al dashboard. Cancelar/volver mantiene el onboarding.
+- La tarjeta de GitHub/remoto permanece deshabilitada y explica su estado
+  **Prototipo / no conectado**.
 - En móvil, apilar opciones; mantener la acción primaria disponible sin
   desplazamiento excesivo.
 
@@ -97,10 +103,27 @@ workspace demo** hasta que haya un selector de origen funcional.
 
 ### Studio / Multipista
 
-- Mostrar dos paneles superiores vacíos con icono y título; debajo, un panel
-  **Multipista** con retícula, filas y bloques de color como estructura mínima.
-- Omitir timestamps, metadatos de pistas, filtros, controles y texto ornamental.
-- Todo el contenido es un skeleton mock sin reproducción ni edición de medios.
+- Mantener los paneles de Preview y Directorio colapsados a sus encabezados con
+  icono y título para reservar el espacio de trabajo al timeline **Multipista**.
+- Mostrar seis canales de muestra en una grilla de nueve columnas, como unidad
+  abstracta de magnitud, sin timestamps. Cada canal tiene un único bloque sólido
+  con icono centrado y longitud inicial de tres columnas. El toggle expande el
+  bloque únicamente en vertical, conserva su longitud horizontal y deja una card
+  vacía como lienzo de trabajo.
+- Las barras compactas tienen alto fijo, mayor grosor y quedan apiladas con poco
+  espacio entre canales (48 px de bloque y 76 px por canal en escritorio). La card
+  abierta tiene 320 px de altura fija, independiente de su ancho, para alojar
+  contenido futuro; no incluye rejilla decorativa en su interior.
+- Cada canal se expande y contrae de forma independiente; varios pueden quedar
+  abiertos simultáneamente. El estado expandido se guarda localmente por proyecto.
+- El cuerpo del bloque permite arrastrarlo horizontalmente con snap a columnas;
+  sus bordes permiten ajustar el inicio y el fin sin controles superpuestos.
+  Click/tap expande o contrae, mientras que arrastrar no debe activar el toggle.
+  Flechas del teclado proporcionan movimiento y ajuste accesibles. Posición,
+  longitud y expansión se guardan localmente por proyecto.
+- Mantener como opcional una variante visual cristalina; el tema sólido es el
+  estilo inicial. Canales y lienzos son mock: no representan contenido
+  de archivos, widgets reales ni edición o reproducción de medios.
 - Ocultar las barras de scroll del viewport del editor/timeline sin deshabilitar
   el scroll de touchpad o gestos táctiles.
 
@@ -130,7 +153,8 @@ informativo.
 
 ## Estados a diseñar en Figma
 
-- Onboarding: inicial, foco/teclado, CTA demo.
+- Onboarding: opciones de origen, explorador local leyendo, navegación interna,
+  raíz fijada, carpeta sin contenido, error/reintento y CTA demo.
 - Dashboard: carga, contenido, error de API, sin proyectos, búsqueda sin
   resultados.
 - Detalle: cargando estructura, estructura disponible, sin selección de archivo,
@@ -143,8 +167,8 @@ informativo.
 
 - La persona distingue dashboard de detalle y los dos selectores de vista.
 - Puede identificar qué es real, inferido, mock o simulado sin consultar ayuda.
-- Puede recorrer la ruta demo completa aunque selección de carpeta y routing real
-  no estén implementados.
+- Puede recorrer la ruta demo completa; el explorador permite inspeccionar
+  filesystem local aunque elegir otra raíz aún no esté implementado.
 - Nunca ve contenido ficticio presentado como un archivo leído.
 - Siempre puede regresar del proyecto al dashboard y entender qué proyecto está
   abierto.

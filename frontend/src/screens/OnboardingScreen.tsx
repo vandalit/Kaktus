@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CircleAlert, FolderOpen, Github, HardDrive, Layers3, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, FolderOpen, Github, HardDrive } from "lucide-react";
+import LocalFolderExplorer from "../components/LocalFolderExplorer";
 import StatusBanner from "../components/StatusBanner";
 
 type OnboardingScreenProps = {
@@ -7,18 +8,16 @@ type OnboardingScreenProps = {
 };
 
 function OnboardingScreen({ onConnectDemo }: OnboardingScreenProps) {
-  const [dialogOpen, setDialogOpen] = useState(true);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [browserOpen, setBrowserOpen] = useState(false);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog && dialogOpen && !dialog.open) dialog.showModal();
-    if (dialog && !dialogOpen && dialog.open) dialog.close();
-  }, [dialogOpen]);
-
-  function connectDemo() {
-    dialogRef.current?.close();
-    onConnectDemo();
+  if (browserOpen) {
+    return (
+      <LocalFolderExplorer
+        workspaceId="workspace-demo"
+        onBack={() => setBrowserOpen(false)}
+        onAccept={onConnectDemo}
+      />
+    );
   }
 
   return (
@@ -45,12 +44,12 @@ function OnboardingScreen({ onConnectDemo }: OnboardingScreenProps) {
         </StatusBanner>
 
         <section className="source-options" aria-label="Opciones de origen">
-          <button className="source-card source-card--available" type="button" onClick={() => setDialogOpen(true)}>
+          <button className="source-card source-card--available" type="button" onClick={() => setBrowserOpen(true)}>
             <span className="source-card__icon"><FolderOpen size={20} /></span>
             <span className="source-card__copy">
               <span className="source-card__eyebrow">CARPETA LOCAL</span>
               <strong>Explorar una carpeta</strong>
-              <small>Para esta demo, abre el workspace incluido.</small>
+              <small>Inspecciona el filesystem; la raíz demo está fijada.</small>
             </span>
             <ArrowRight className="source-card__arrow" size={18} />
             <span className="source-card__badge">DEMO DISPONIBLE</span>
@@ -68,8 +67,8 @@ function OnboardingScreen({ onConnectDemo }: OnboardingScreenProps) {
         </section>
 
         <StatusBanner tone="warning" label="ALCANCE ACTUAL">
-          El selector de carpetas y la conexión a GitHub son representativos. La acción disponible carga
-          el workspace local de demostración <code>CaseUses/</code>.
+          El explorador lee el filesystem real de <code>CaseUses/</code>, pero no permite cambiar la raíz.
+          La conexión a GitHub todavía es solo una representación.
         </StatusBanner>
 
         <div className="onboarding__footnote">
@@ -78,40 +77,6 @@ function OnboardingScreen({ onConnectDemo }: OnboardingScreenProps) {
         </div>
       </div>
 
-      <dialog
-        className="demo-dialog"
-        ref={dialogRef}
-        aria-labelledby="demo-dialog-title"
-        onClose={() => setDialogOpen(false)}
-        onClick={(event) => {
-          if (event.target === dialogRef.current) dialogRef.current.close();
-        }}
-      >
-        <div className="demo-dialog__topline">
-          <span className="demo-dialog__icon"><Layers3 size={18} /></span>
-          <button className="demo-dialog__close" type="button" aria-label="Cerrar aviso" onClick={() => dialogRef.current?.close()}>
-            <X size={17} />
-          </button>
-        </div>
-        <div className="demo-dialog__eyebrow"><CircleAlert size={13} /> ACCESO DE DEMOSTRACIÓN</div>
-        <h2 id="demo-dialog-title">Solo puedes conectar el repo demo</h2>
-        <p>
-          El onboarding es una maqueta: la selección de carpetas reales y la conexión a GitHub aún no
-          están habilitadas. Puedes continuar con el workspace local incluido en Kaktus.
-        </p>
-        <div className="demo-dialog__repo">
-          <span className="demo-dialog__repo-icon"><FolderOpen size={17} /></span>
-          <span><strong>Kaktus · CaseUses</strong><small>Workspace local de demostración</small></span>
-          <span className="demo-dialog__repo-state">DISPONIBLE</span>
-        </div>
-        <StatusBanner tone="warning" label="NO CONECTA A GITHUB">
-          No se solicitarán credenciales ni se clonará un repositorio remoto.
-        </StatusBanner>
-        <div className="demo-dialog__actions">
-          <button className="button-secondary" type="button" onClick={() => dialogRef.current?.close()}>Volver</button>
-          <button className="button-primary" type="button" onClick={connectDemo}>Conectar repo demo <ArrowRight size={16} /></button>
-        </div>
-      </dialog>
     </main>
   );
 }

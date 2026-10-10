@@ -1,6 +1,9 @@
 # Lógica del producto
 
-**Estado:** reglas funcionales acordadas; persistencia SQLite aún pendiente.
+**Estado:** reglas funcionales y persistencia local implementadas para el
+recorrido demo; la generalización de rutas, identidades y múltiples raíces
+queda pendiente. Ver la
+[auditoría de taxonomía y datos](./auditoria-taxonomia-y-datos.md).
 
 ## Reglas centrales
 
@@ -58,8 +61,10 @@ distintas. No usar el índice de una tarjeta como identidad.
 ### Entrada
 
 1. Abrir `/` si no hay un workspace demo/activo en la URL.
-2. Elegir **Continuar con workspace demo**.
-3. Navegar al dashboard `projects` y cargar datos reales de `CaseUses/`.
+2. Abrir la opción de carpeta y leer la estructura local real en el explorador
+   de onboarding. La raíz está fijada a `CaseUses/`; explorar subdirectorios no
+   cambia el origen elegido.
+3. Confirmar **Aceptar y continuar** para navegar al dashboard `projects`.
 4. Si carga falla, mantener el contexto del workspace y mostrar error/reintento.
 
 ### Dashboard
@@ -113,9 +118,15 @@ indisponibilidad; no se conecta a un asistente.
   persistencia/ejecución de cambios.
 - **Studio navigation:** barra compartida del Studio con contexto y selector de
   vistas; el rail lateral del workspace se compacta.
-- **Multitrack panels:** preview y directorio vacíos con icono/título, más un
-  panel Multipista con retícula y filas coloreadas; cada panel es independiente
-  y la vista permanece como skeleton visual.
+- **Multitrack panels:** Preview y Directorio se reducen a encabezados; el panel
+  Multipista concentra seis canales mock en una grilla abstracta de nueve columnas,
+  sin timestamps. Cada canal tiene un bloque sólido de longitud inicial de tres
+  columnas; el acordeón lo expande únicamente en vertical, conserva esa longitud
+  y revela una card vacía de altura fija independiente del ancho, sin rejilla
+  decorativa interior. El tema
+  sólido es inicial y el cristal opcional; la longitud se ajusta horizontalmente
+  y la posición se mueve por columnas mediante handlers separados; ambas se
+  persisten localmente por proyecto. No hay edición de medios.
 - **Banner de estado/fuente:** hace explícito el nivel de realidad.
 - **Componentes de dominio:** tarjeta de proyecto, nodo, item de archivo,
   explorador, editor, terminal y chat.
@@ -143,13 +154,20 @@ volver) al nivel de navegación.
 - Terminal mock sin ejecución y chat de prueba con respuesta no disponible tras
   10 segundos; ninguna acción altera archivos.
 
-### Pendientes técnicos antes del código
+### Pendientes antes de generalizar el MVP
 
-- Cerrar driver SQLite compatible con Node 20 y sistemas operativos objetivo.
-- Confirmar ubicación de datos de usuario por plataforma.
-- Decidir si el archivo seleccionado se recuerda desde el primer release; el
-  modelo lo permite pero puede omitirse inicialmente.
-- Definir política de retención de snapshots antiguos después del MVP.
+- Alinear el UUID persistido del proyecto con el ID canónico de API/ruta; tratar
+  el nombre/ruta como alias o atributo, no como identidad.
+- Resolver `workspaceId` y `rootId` desde el contexto de navegación y limitar
+  listado/escaneo a ese origen.
+- Decidir si la preferencia de dashboard es un fallback de una ruta sin vista o
+  si se elimina mientras todas las rutas incluyan un `dashboardViewId`.
+- Retirar inferencias acopladas a nombres de carpetas y definir cómo exponer el
+  estado del último escaneo.
+- Antes de una distribución Windows, validar allí el driver nativo,
+  almacenamiento local y empaquetado; las pruebas WSL no bastan.
+- Definir política de retención de snapshots antiguos antes de que el uso real
+  aumente el volumen de la base.
 
 El orden y criterios de trabajo están en la
 [hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).

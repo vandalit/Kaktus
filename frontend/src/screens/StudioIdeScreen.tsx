@@ -14,24 +14,16 @@ import {
   Terminal,
   Workflow
 } from "lucide-react";
+import {
+  getProjectFile,
+  getProjectPreferences,
+  getProjectTree,
+  patchProjectPreferences
+} from "../api/client";
 import type { Project, ProjectTreeEntry } from "../types";
 
 type StudioIdeScreenProps = {
   project: Project;
-};
-
-type ProjectTreeResponse = {
-  entries: ProjectTreeEntry[];
-  error?: string;
-};
-
-type ProjectFileResponse = {
-  file: {
-    path: string;
-    content: string;
-    size: number;
-  };
-  error?: string;
 };
 
 type ChatMessage = {
@@ -48,6 +40,12 @@ function firstFile(entries: ProjectTreeEntry[]): string | null {
   return null;
 }
 
+function containsFile(entries: ProjectTreeEntry[], selectedPath: string): boolean {
+  return entries.some((entry) => entry.type === "file"
+    ? entry.path === selectedPath
+    : containsFile(entry.children || [], selectedPath));
+}
+
 function StudioIdeScreen({ project }: StudioIdeScreenProps) {
   const [tree, setTree] = useState<ProjectTreeEntry[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
@@ -57,6 +55,7 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
   const [fileContent, setFileContent] = useState("");
   const [fileLoading, setFileLoading] = useState(false);
   const [fileError, setFileError] = useState("");
+  const [preferenceNotice, setPreferenceNotice] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatPending, setChatPending] = useState(false);
@@ -67,11 +66,23 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
       setTreeLoading(true);
       setTreeError("");
       try {
-        const response = await fetch(`/api/projects/${encodeURIComponent(project.id)}/tree`, { signal: controller.signal });
-        const result = (await response.json()) as ProjectTreeResponse;
-        if (!response.ok) throw new Error(result.error || `No se pudo leer el árbol (${response.status}).`);
-        setTree(result.entries);
-        setSelectedPath(firstFile(result.entries) || "");
+        const treeResult = await getProjectTree(project.id, controller.signal);
+        if (controller.signal.aborted) return;
+        setTree(treeResult.entries);
+        let preferredPath: string | null = null;
+        try {
+          preferredPath = (await getProjectPreferences(project.id)).selected_file_path;
+        } catch (preferenceError) {
+          setPreferenceNotice(preferenceError instanceof Error
+            ? `No se pudieron cargar las preferencias: ${preferenceError.message}`
+            : "No se pudieron cargar las preferencias del proyecto.");
+        }
+        if (controller.signal.aborted) return;
+        setSelectedPath(
+          preferredPath && containsFile(treeResult.entries, preferredPath)
+            ? preferredPath
+            : firstFile(treeResult.entries) || ""
+        );
         setExpandedDirectories({});
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -96,15 +107,9 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
     async function loadFile() {
       setFileLoading(true);
       setFileError("");
-      const query = new URLSearchParams({ path: selectedPath });
       try {
-        const response = await fetch(
-          `/api/projects/${encodeURIComponent(project.id)}/file?${query.toString()}`,
-          { signal: controller.signal }
-        );
-        const result = (await response.json()) as ProjectFileResponse;
-        if (!response.ok) throw new Error(result.error || `No se pudo leer el archivo (${response.status}).`);
-        setFileContent(result.file.content);
+        const file = await getProjectFile(project.id, selectedPath, controller.signal);
+        if (!controller.signal.aborted) setFileContent(file.content);
       } catch (error) {
         if (!controller.signal.aborted) {
           setFileContent("");
@@ -139,6 +144,18 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
     }));
   }
 
+  function selectFile(filePath: string) {
+    setSelectedPath(filePath);
+    setPreferenceNotice("");
+    void patchProjectPreferences(project.id, { selected_file_path: filePath })
+      .then(() => setPreferenceNotice(""))
+      .catch((error: unknown) => {
+        setPreferenceNotice(error instanceof Error
+          ? `No se pudo guardar el archivo preferido: ${error.message}`
+          : "No se pudo guardar el archivo preferido.");
+      });
+  }
+
   function renderEntries(entries: ProjectTreeEntry[], depth = 0) {
     return entries.map((entry) => {
       if (entry.type === "directory") {
@@ -169,7 +186,7 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
           type="button"
           key={entry.path}
           aria-current={selectedPath === entry.path ? "page" : undefined}
-          onClick={() => setSelectedPath(entry.path)}
+          onClick={() => selectFile(entry.path)}
           style={{ "--tree-depth": depth } as CSSProperties}
           title={entry.path}
         >
@@ -199,6 +216,7 @@ function StudioIdeScreen({ project }: StudioIdeScreenProps) {
           Terminal y chat son simulaciones.
         </span>
       </div>
+      {preferenceNotice && <div className="studio-ide__preference-notice" role="status">{preferenceNotice}</div>}
 
       <div className="studio-ide__layout">
         <aside className="studio-explorer" aria-label="Explorador de archivos">

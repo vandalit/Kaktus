@@ -7,11 +7,11 @@ si se pierde la conversación.
 ## Qué es Kaktus
 
 Kaktus es el producto y el nombre del repositorio: un entorno local, visual y
-tipo IDE para comprender y
-navegar proyectos de desarrollo. El código fuente sigue siendo la fuente de
-verdad; sus vistas son representaciones navegables de la estructura y el
-significado del proyecto. En la etapa actual se trabaja en el frontend y sus
-maquetas, no en edición real ni en análisis semántico profundo.
+tipo IDE para comprender y navegar proyectos de desarrollo. El código fuente
+sigue siendo la fuente de verdad; sus vistas son representaciones navegables
+de la estructura y el significado del proyecto. El MVP ya incluye API local,
+SQLite para snapshots/preferencias y un frontend conectado al workspace demo;
+no incluye edición real ni análisis semántico profundo.
 
 Principios acordados:
 
@@ -36,26 +36,27 @@ Principios acordados:
 Usar estos términos de manera consistente en diseño, código y documentación:
 
 - **Workspace / espacio de trabajo:** contexto que contiene una o más raíces de
-  proyecto. En la maqueta actual, el workspace disponible es este entorno local.
+  proyecto. El MVP solo inicializa el workspace demo `workspace-demo`.
 - **Origen / raíz:** carpeta seleccionada para explorar. Conectar o seleccionar
-  una carpeta/repositorio desde el onboarding es mock por ahora; `CaseUses/` es
+  una carpeta/repositorio desde el onboarding sigue siendo mock; `CaseUses/` es
   la raíz local real que alimenta la demo.
 - **Proyecto:** carpeta de proyecto detectada dentro de la raíz. En el caso
   actual, cada carpeta directa de `CaseUses/` es un proyecto.
 - **Identidad:** id estable con que se referencia un workspace, proyecto o
-  archivo. Para proyectos y archivos locales debe derivarse de su ruta relativa,
-  no de un título inferido o del orden visual.
+  archivo. SQLite asigna UUID al proyecto, aunque la API/interfaz demo todavía
+  exponen la ruta relativa como `Project.id`; la ruta no es aún un ID canónico
+  en la interfaz.
 - **Datos / fuente de verdad:** los archivos reales del filesystem. La API local
-  existente obtiene resúmenes; no hay una base de datos persistente del
-  producto. Las respuestas de API y el estado de UI no deben describirse como
-  una base de datos.
+  lee archivos y guarda en SQLite un índice reconstruible de metadata,
+  snapshots y preferencias. La base no almacena el contenido fuente.
 - **Dashboard:** nivel que resume y compara el conjunto de proyectos del
   workspace. Sus diferentes modos muestran los mismos proyectos con distintas
   visualizaciones; cambiar el modo no abre un proyecto.
 - **Vista:** una perspectiva o modo de presentación dentro de un mismo contexto.
   Hay vistas del dashboard y, por separado, vistas de detalle del proyecto.
-- **Vista de proyecto:** contexto enfocado en un único proyecto. Su vista inicial
-  será **IDE clásico**; tendrá un selector propio para otras perspectivas.
+- **Resumen del proyecto:** pantalla entre el dashboard y el Studio, con
+  identidad, resumen y acceso al espacio del proyecto.
+- **Studio:** contexto enfocado en un proyecto con vistas IDE y Multipista.
 - **Ítem:** elemento mostrado dentro de una vista, por ejemplo una tarjeta de
   proyecto en el dashboard o un archivo/carpeta en el explorador IDE. Un ítem no
   es una vista ni constituye por sí mismo una identidad estable.
@@ -66,15 +67,14 @@ Usar estos términos de manera consistente en diseño, código y documentación:
 ### Niveles de navegación previstos
 
 1. **Onboarding:** pantalla inicial tipo IDE para elegir una carpeta raíz o
-   conectar un repositorio. En esta etapa es una maqueta; un botón **Continuar**
-   debe permitir avanzar al workspace de demostración aunque el selector o el
-   routing no sean funcionales.
+   conectar un repositorio. La selección real es mock; un botón permite
+   continuar al workspace de demostración.
 2. **Dashboard del workspace:** resume los proyectos encontrados. Conserva su
    selector de vistas, que cambia solo la presentación del dashboard.
-3. **Detalle de proyecto:** al seleccionar un proyecto, abre su contexto
-   independiente con selector de vistas. La vista por defecto es **IDE clásico**.
-4. **Otras vistas de proyecto:** incluir al menos una segunda opción **En
-   construcción** para diseñar y comprobar la navegación entre perspectivas.
+3. **Resumen del proyecto:** destino al seleccionar un proyecto, previo al
+   Studio.
+4. **Studio del proyecto:** contexto independiente con vistas IDE y Multipista
+   y una tercera opción bloqueada **En construcción**.
 
 El selector de vistas del dashboard y el selector de vistas del proyecto son
 controles distintos, con alcance y estado separados. Al entrar/salir del detalle
@@ -149,13 +149,27 @@ Endpoints actuales:
   lectura, validando traversal, symlinks, tipo y límite de tamaño.
 - `POST /api/workspaces/:id/scan`: reescaneo local explícito; un error parcial
   conserva el último snapshot exitoso.
+- `GET /api/workspaces/:id/source-browser?path=...`: lectura de directorios
+  bajo la raíz registrada para el explorador de onboarding; no expone la ruta
+  absoluta ni permite salir de la raíz.
 - `GET/PATCH /api/workspaces/:id/preferences` y
   `GET/PATCH /api/projects/:id/preferences`: lectura/escritura parcial con
   catálogos cerrados; rutas de archivo se validan contra el último snapshot.
 
-Los endpoints de lectura y preferencias tienen cobertura de integración HTTP
-con base aislada. El frontend consume listado, árbol y lectura de archivo; aún
-no está conectado al reescaneo ni a preferencias.
+Los endpoints tienen cobertura de integración HTTP con base aislada. El
+frontend consume listado, árbol y lectura, expone reescaneo manual y persiste
+modo/orden de dashboard, vista de Studio y archivo seleccionado. La URL sigue
+siendo la autoridad para la vista activa.
+
+`frontend/src/api/client.ts` centraliza los contratos tipados. La UI muestra el
+estado real de la conexión API/SQLite, y señala errores de persistencia sin
+bloquear la exploración local. La recarga del dashboard dispara un reescaneo y
+luego vuelve a leer el snapshot actualizado.
+
+El onboarding abre un explorador local que lee carpetas y archivos reales y
+muestra la jerarquía de la raíz demo. La navegación permite inspeccionar
+subdirectorios sin cambiar la raíz fijada; **Aceptar y continuar** es la única
+acción que entra al dashboard.
 
 ### Frontend
 
@@ -341,14 +355,14 @@ La tienda demo tiene dependencias separadas; sus instrucciones están en
 ## Estado de producto y hoja de ruta
 
 La jerarquía de pantallas y los límites entre dashboard, resumen de proyecto y
-Studio están definidos y maquetados. La siguiente etapa implementará SQLite y
-un backend local básico; no empezará todavía la selección real de carpetas,
-Git remoto ni la escritura de archivos.
+Studio están definidos. SQLite, el backend local y la conexión frontend están
+implementados para el workspace demo; no están habilitadas la selección real
+de carpetas, la conexión Git remota ni la escritura de archivos.
 
 La [hoja de ruta SQLite y backend](./docs/roadmap/sqlite-y-backend.md) es la
-referencia activa y secuencia el trabajo en: cerrar driver/runtime y directorio
-de datos, añadir migraciones, guardar snapshots reconstruibles, exponer API y
-preferencias, conectar el frontend y validar persistencia/errores.
+referencia activa. La integración demo está validada; la siguiente etapa es
+alinear IDs, rutas, alcance de workspace y preferencias antes de generalizar el
+onboarding o habilitar múltiples raíces.
 
 ## Documentos vigentes
 
@@ -362,6 +376,9 @@ preferencias, conectar el frontend y validar persistencia/errores.
   componentes.
 - [Modelo de datos](./docs/data/modelo-de-datos.md): esquema y decisiones de
   persistencia SQLite.
+- [Auditoría de taxonomía y datos](./docs/product/auditoria-taxonomia-y-datos.md):
+  inventario de valores dinámicos, persistidos, de configuración y mock, y
+  hoja de ruta de alineación.
 - [Roadmap SQLite y backend](./docs/roadmap/sqlite-y-backend.md): etapas y
   criterios de terminado.
 
@@ -376,11 +393,10 @@ preferencias, conectar el frontend y validar persistencia/errores.
   `better-sqlite3` sin ORM fue añadido para SQLite. El paquete nativo deberá
   compilarse y validarse de nuevo en Windows nativo antes de distribuir el
   ejecutable Windows.
-- La API actual ya lee summaries, árbol y archivos de `CaseUses/`; el trabajo
-  futuro sustituye summaries/árbol por snapshots indexados sin relajar las
-  validaciones de lectura de archivo.
+- La API ya lee resumen/árbol desde snapshots indexados y contenido de archivo
+  desde el filesystem bajo demanda, con validación de lectura.
 
-### Inicio de SQLite y scaffolding del backend
+### Historial: inicio de SQLite y scaffolding del backend
 
 - Se incorporó `better-sqlite3` como driver para Node 20 y se creó
   `backend/database.js`, separado del servidor HTTP, con migraciones versionadas,
@@ -402,5 +418,5 @@ preferencias, conectar el frontend y validar persistencia/errores.
   acceso y watchers; no asumir que `\\wsl$` funciona como un filesystem nativo.
 - Dependencias locales raíz quedan ignoradas vía `.gitignore`; lockfile npm
   registra el driver.
-- Siguiente: servicio de seed/escaneo sobre `CaseUses/`, transacciones y pruebas
-  de fallo antes de exponer endpoints nuevos o conectar la UI.
+- En esa etapa, el siguiente paso era el servicio de seed/escaneo sobre
+  `CaseUses/`; ese trabajo se completó después y queda documentado arriba.

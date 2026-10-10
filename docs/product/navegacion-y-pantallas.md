@@ -1,7 +1,11 @@
 # Navegación y pantallas
 
-**Estado:** contrato de navegación implementado con History API nativo.
-**Meta:** conservar destinos y límites de contexto al integrar persistencia.
+**Estado:** recorrido demo implementado con History API nativo; el contrato
+dinámico de `:workspaceId` y el ID canónico del proyecto aún no están
+generalizados.
+**Meta:** conservar destinos y límites de contexto al alinear la ruta demo con
+entidades persistidas. Ver la
+[auditoría de taxonomía y datos](./auditoria-taxonomia-y-datos.md).
 
 ## Modelo de navegación
 
@@ -52,6 +56,12 @@ El ID de proyecto será opaco y persistente; no depende del título ni del orden
 La clave natural inicial es origen + ruta relativa. Si cambia la ruta, se trata
 como una nueva identidad hasta que exista detección de movimientos segura.
 
+**Alcance implementado hoy:** el router reconoce literalmente
+`/workspaces/demo/...`; el API siembra el workspace `workspace-demo`, y el
+listado de proyectos expone la ruta relativa como `Project.id`, aunque SQLite
+también guarda un UUID. Los ejemplos con `:workspaceId` y `:projectId` son el
+contrato objetivo, no una capacidad dinámica ya terminada.
+
 ## Estado en URL y estado efímero
 
 La URL es fuente de verdad para el nivel de navegación, el workspace, el
@@ -100,15 +110,20 @@ workspace que Kaktus ya puede leer.
 
 - Canvas principal minimalista, bloques planos y grises grafito.
 - Alternativas representativas: carpeta local y repositorio remoto.
-- Modal inicial informa que solo está disponible el workspace demo local e
-  incluye **Conectar repo demo** para continuar al dashboard.
-- La tarjeta de carpeta local vuelve a abrir el modal; no abre un selector nativo.
+- La tarjeta de carpeta local abre una pantalla/componente de explorador, no un
+  modal. El componente lee la estructura del filesystem local y muestra la ruta
+  de la raíz demo con su jerarquía superior.
+- El explorador permite navegar carpetas dentro de la raíz fijada; no puede
+  cambiar ni seleccionar otra raíz en esta etapa. Archivos aparecen como
+  elementos no seleccionables.
+- La acción **Aceptar y continuar** es la única que abandona el onboarding y
+  carga `CaseUses/` en el dashboard. Volver al onboarding no cambia de ruta.
 - La opción de GitHub/remoto queda visible y deshabilitada con su estado
   **No disponible**.
 - Banners **DEMO LOCAL** y **ALCANCE ACTUAL** explican fuente y limitaciones.
 - Éxito: navegar a `/workspaces/demo/dashboard/projects`; el dashboard lee
   `CaseUses/` mediante la API local existente.
-- No incluir carga de URL, OAuth ni diálogo real de selección de carpeta aún.
+- No incluir carga de URL, OAuth ni selección real de carpeta aún.
 
 ### P1 — Dashboard / Proyectos
 
@@ -159,13 +174,23 @@ que abre el Studio y no debe activarse al usar el retorno.
 
 - Ruta: `/workspaces/:workspaceId/projects/:projectId/studio/multipista`.
 - Mantiene rail y barra superior compartidos con IDE, conservando el proyecto.
-- Skeleton modular con preview y directorio en la zona superior, y timeline
-  multipista a ancho completo abajo.
-- Preview y directorio conservan solo marco, icono y título; su interior queda
-  vacío en esta etapa.
-- El panel inferior conserva el título **Multipista**, una retícula de columnas,
-  filas y bloques de color. No muestra timestamps, nombres/tipos de pistas,
-  filtros ni controles. Es un esqueleto visual; no reproduce ni edita medios.
+- Preview y Directorio quedan colapsados a encabezados con icono y título para
+  dar el espacio principal al timeline **Multipista**.
+- El timeline muestra seis canales placeholder sobre una grilla de nueve
+  columnas, una unidad abstracta de magnitud sin timestamps. Cada canal tiene un
+  único bloque sólido con icono centrado y longitud inicial de tres columnas.
+- El toggle expande cada canal independientemente, conserva la longitud del
+  bloque y revela una card vacía como lienzo de trabajo; varios canales pueden
+  permanecer abiertos. La card tiene 320 px de altura fija, independiente del
+  ancho, y no lleva rejilla decorativa. El estado se persiste localmente por
+  proyecto.
+- Las barras compactas tienen 48 px de alto, con canales de 76 px apilados.
+  Arrastrar el cuerpo mueve horizontalmente con snap a columnas; arrastrar los
+  bordes ajusta inicio o fin. Click/tap expande; el teclado ofrece movimiento y
+  ajuste accesibles. Posición y longitud también se persisten por proyecto.
+- El tema sólido es el predeterminado; se ofrece una variante cristalina opcional.
+  Canales y lienzos son mock: no representan widgets reales ni reproducen o
+  editan medios.
 - La tercera posición del selector sigue bloqueada, con tooltip explicativo.
 - Los scrollbars del editor y timeline se ocultan visualmente, conservando
   desplazamiento por rueda, touchpad y gesto táctil.

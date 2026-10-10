@@ -1,9 +1,11 @@
 # Hoja de ruta: SQLite y backend local
 
-**Estado:** API local con snapshots SQLite, reescaneo manual y preferencias
-persistentes implementada en Linux/WSL; aún no está conectada al frontend.
-**Objetivo:** integrar los endpoints con la UI sin cambiar la jerarquía ni
-guardar contenido fuente.
+**Estado:** API local y recorrido frontend demo conectados y validados en
+Linux/WSL. Antes de soportar workspaces/raíces arbitrarias, hay que cerrar la
+alineación de identidad, rutas y preferencias descrita en la
+[auditoría de taxonomía y datos](../product/auditoria-taxonomia-y-datos.md).
+**Objetivo:** mantener el filesystem como autoridad y evolucionar el MVP en
+etapas sin adelantar selección arbitraria ni escritura de archivos.
 
 ## Principios de implementación
 
@@ -106,28 +108,51 @@ confirma que se vuelve a validar contra el filesystem y no entrega contenido
 inexistente. La simulación de DB inaccesible para health queda como cobertura
 adicional, no como bloqueo del contrato.
 
-### 4. Conectar el frontend sin cambiar la jerarquía
+### 4. Conectar el frontend sin cambiar la jerarquía — completada para el demo
 
-- Conectar preferencias y reescaneo explícito en frontend; conservar
-  Proyectos/Consola como dos vistas del mismo conjunto.
-- Resolver la diferencia entre los IDs/rutas actuales basados en nombre de
-  carpeta (`01-mini-store`) y el UUID persistido: durante la transición, aceptar
-  los identificadores actuales como alias resolubles por origen/ruta; generar
-  enlaces nuevos con el ID estable y no romper bookmarks silenciosamente.
-- Cargar preferencias como defaults iniciales; los cambios explícitos del
-  usuario actualizan la URL y la preferencia. URL vigente gana ante conflicto.
-- Al reabrir un proyecto, usar preferencia validada de vista/archivo; si ya no
-  es válida, usar IDE y limpiar/ignorar selección obsoleta sin ocultar error de
-  filesystem.
-- Presentar estado de escaneo y acción de actualizar; distinguir último índice
-  correcto de un fallo de actualización.
-- Mantener mock de onboarding/Git, monitores visuales de salud, chat, terminal
-  y Multipista; no guardar esos datos.
+- **Completado:** cliente API tipado y centralizado para health, proyectos,
+  árbol, archivo, reescaneo y preferencias.
+- **Completado:** dashboard persiste modo/orden, restaura el orden, y ofrece
+  reescaneo manual con estados de éxito/parcial/error; el listado se vuelve a
+  cargar desde SQLite al terminar.
+- **Completado:** Studio restaura la vista preferida (proyecto sobre workspace),
+  persiste cambios de vista y selección de archivo. Los valores URL siguen
+  prevaleciendo cuando la ruta especifica explícitamente la vista.
+- **Completado:** UI distingue conexión API/SQLite y comunica fallos de
+  preferencias sin bloquear la exploración/edición de solo lectura.
+- **Completado:** el onboarding abre un explorador conectado a lectura real de
+  directorios dentro de la raíz fijada. La navegación no cambia el origen y
+  aceptar es la única acción que continúa al dashboard.
+- **Verificado manualmente:** API/SQLite disponibles, reescaneo y recarga de
+  proyectos, cambio de vistas, persistencia del orden, preferencia Studio y
+  archivo seleccionado tras recargar.
+- **Verificación automatizada:** build frontend, 7 pruebas backend y
+  `git diff --check` pasan.
 
-**Pruebas:** navegación existente, URL directa/atrás-adelante, preferencias,
-reapertura de proyecto, archivo desaparecido, carga/error/vacío y responsive.
+La conexión está completa para el workspace demo, no para un contrato de
+workspaces arbitrarios. No se ha migrado la interfaz al UUID de proyecto:
+SQLite lo guarda, pero el listado entrega la ruta relativa como `id`. La
+preferencia `preferred_dashboard_view` se guarda, pero no participa en la
+resolución inicial mientras las URLs siempre declaren la vista. Estos son
+pendientes de alineación de producto/contrato, no de conectar endpoints.
 
-### 5. Actualización live de repositorios locales
+### 4a. Alinear taxonomía, identidad y rutas — siguiente etapa
+
+1. Confirmar IDs canónicos de Workspace, Root y Project en rutas y contratos
+   API; mantener `demo` y rutas relativas solo como alias de compatibilidad.
+2. Resolver listado y escaneo dentro del workspace/root indicado, no como
+   colección global de raíces locales.
+3. Definir semántica de defaults: URL explícita prevalece; usar
+   `preferred_dashboard_view` solo en una entrada sin vista o eliminarla.
+4. Corregir/retirar heurísticas ligadas al nombre de fixtures y distinguir
+   señales locales reales, inferidas y mock, especialmente `READY` y salud.
+5. Añadir pruebas de URL desconocida, workspace/proyecto no encontrado, raíz
+   sin acceso, alias antiguo y conflicto URL/preferencia.
+
+No comenzar selección arbitraria de carpetas ni watcher hasta completar y
+verificar esta etapa.
+
+### 5. Actualización live de repositorios locales — futura
 
 - Después de estabilizar escaneo/API y la raíz configurable, añadir watcher
   filesystem cuando la plataforma lo soporte y reconciliación periódica o manual
@@ -210,7 +235,6 @@ Después de cerrar el MVP local:
 
 ## Siguiente paso inmediato
 
-Implementar las preferencias de workspace/proyecto con validación estricta,
-pruebas HTTP y persistencia SQLite. Después conectar el frontend a reescaneo y
-preferencias, y validar que URL y jerarquía de vistas sigan gobernando la
-navegación.
+Completar la etapa 4a tomando la auditoría como checklist y actualizar este
+plan al cerrar cada punto. Después decidir el contrato de selección de raíces;
+solo entonces abordar actualización live y empaquetado Windows.

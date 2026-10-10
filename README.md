@@ -13,6 +13,7 @@ Product structure and UX contracts:
 - [UX proposal](./docs/product/experiencia-ux.md)
 - [Navigation and screens](./docs/product/navegacion-y-pantallas.md)
 - [Product logic](./docs/product/logica-del-producto.md)
+- [Taxonomy, views, and data audit](./docs/product/auditoria-taxonomia-y-datos.md)
 - [Frontend conventions](./docs/product/convenciones-frontend.md)
 - [SQLite data model](./docs/data/modelo-de-datos.md)
 - [SQLite and backend roadmap](./docs/roadmap/sqlite-y-backend.md)
@@ -21,8 +22,14 @@ See [Bitacora.md](./Bitacora.md) for implementation history and current status.
 The local Node.js API uses SQLite for workspace metadata, project snapshots,
 file-tree indexes, and validated UI preferences. The filesystem remains
 authoritative: file contents are read from disk on demand and are never stored
-in SQLite. The API supports explicit workspace rescans; the frontend does not
-yet expose that action or consume the persisted preferences.
+in SQLite. The dashboard and Studio persist order, Studio view, and selected
+file preferences, and expose manual workspace rescans; the URL remains
+authoritative for the active view. A stored default dashboard view is not yet
+used to resolve an entry route; see the
+[taxonomy and data audit](./docs/product/auditoria-taxonomia-y-datos.md).
+The onboarding folder explorer reads real local directories under the demo
+root; navigation within that root is available, but changing the selected root
+is locked until folder selection is implemented.
 
 ## Run in local development
 

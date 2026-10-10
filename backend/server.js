@@ -1,5 +1,6 @@
 const fs = require("node:fs/promises");
 const http = require("node:http");
+const os = require("node:os");
 const path = require("node:path");
 const { openDatabase } = require("./database");
 const {
@@ -20,6 +21,87 @@ const casesDirectory = path.join(projectRoot, "CaseUses");
 const port = Number(process.env.KAKTUS_API_PORT || 4170);
 const maxEditorFileSize = 1024 * 1024;
 const database = openDatabase();
+const maxDirectoryEntries = 500;
+
+function displayPathSegments(rootPath) {
+  const relativeToHome = path.relative(os.homedir(), rootPath);
+  if (
+    !relativeToHome ||
+    relativeToHome === "."
+  ) {
+    return ["~"];
+  }
+  if (
+    relativeToHome === ".." ||
+    relativeToHome.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeToHome)
+  ) {
+    return ["…", path.basename(rootPath)];
+  }
+  return ["~", ...relativeToHome.split(path.sep).filter(Boolean)];
+}
+
+async function readSourceDirectory(rootPath, relativePath) {
+  const pathParts = relativePath ? relativePath.split("/") : [];
+  if (
+    relativePath.includes("\u0000") ||
+    relativePath.includes("\\") ||
+    path.isAbsolute(relativePath) ||
+    pathParts.some((part) => !part || part === "." || part === "..")
+  ) {
+    return { status: 400, error: "La ruta de exploración no es válida." };
+  }
+  let currentPath = rootPath;
+  const rootStats = await fs.lstat(rootPath);
+  if (!rootStats.isDirectory() || rootStats.isSymbolicLink()) {
+    return { status: 404, error: "La raíz del workspace no está disponible." };
+  }
+  for (const part of pathParts) {
+    currentPath = path.join(currentPath, part);
+    const entry = await fs.lstat(currentPath).catch((error) => {
+      if (error.code === "ENOENT" || error.code === "ENOTDIR") return null;
+      throw error;
+    });
+    if (!entry || !entry.isDirectory() || entry.isSymbolicLink()) {
+      return { status: 404, error: "No se encontró el directorio solicitado." };
+    }
+  }
+
+  const [canonicalRoot, canonicalDirectory] = await Promise.all([
+    fs.realpath(rootPath),
+    fs.realpath(currentPath)
+  ]);
+  const canonicalRelativePath = path.relative(canonicalRoot, canonicalDirectory);
+  if (
+    canonicalRelativePath === ".." ||
+    canonicalRelativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(canonicalRelativePath)
+  ) {
+    return { status: 400, error: "La ruta de exploración no es válida." };
+  }
+
+  const entries = await fs.readdir(currentPath, { withFileTypes: true });
+  const directories = entries
+    .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink())
+    .map((entry) => ({ name: entry.name, type: "directory" }));
+  const files = entries
+    .filter((entry) => entry.isFile() && !entry.isSymbolicLink())
+    .map((entry) => ({ name: entry.name, type: "file" }));
+  const visibleEntries = [...directories, ...files].sort((left, right) => {
+    if (left.type !== right.type) return left.type === "directory" ? -1 : 1;
+    return left.name.localeCompare(right.name, "es");
+  });
+  const limitedEntries = visibleEntries.slice(0, maxDirectoryEntries).map((entry) => ({
+    ...entry,
+    relativePath: path.posix.join(relativePath, entry.name)
+  }));
+  return {
+    status: 200,
+    relativePath,
+    entries: limitedEntries,
+    truncated: visibleEntries.length > maxDirectoryEntries
+  };
+}
 
 async function readProjectFile(projectDirectory, relativePath) {
   const pathParts = relativePath.split("/");
@@ -134,6 +216,60 @@ const server = http.createServer(async (request, response) => {
     }
     return;
   }
+  const sourceBrowserRoute = requestUrl.pathname.match(
+    /^\/api\/workspaces\/([^/]+)\/source-browser$/
+  );
+  if (sourceBrowserRoute) {
+    if (request.method !== "GET") {
+      sendJson(response, 405, { error: "Este endpoint requiere el método GET." });
+      return;
+    }
+    let workspaceId;
+    try {
+      workspaceId = decodeURIComponent(sourceBrowserRoute[1]);
+    } catch {
+      sendJson(response, 400, { error: "El identificador del workspace no es válido." });
+      return;
+    }
+    const root = database.prepare(`
+      SELECT local_path, display_name FROM roots
+      WHERE workspace_id = ? AND kind = 'local'
+      ORDER BY created_at
+      LIMIT 1
+    `).get(workspaceId);
+    if (!root) {
+      sendJson(response, 404, { error: "No se encontró el origen local del workspace." });
+      return;
+    }
+
+    try {
+      const relativePath = requestUrl.searchParams.get("path") || "";
+      const result = await readSourceDirectory(root.local_path, relativePath);
+      if (result.status !== 200) {
+        sendJson(response, result.status, { error: result.error });
+        return;
+      }
+      const rootPathSegments = displayPathSegments(root.local_path);
+      sendJson(response, 200, {
+        rootName: root.display_name,
+        rootPathSegments,
+        locationSegments: [...rootPathSegments, ...relativePath.split("/").filter(Boolean)],
+        relativePath: result.relativePath,
+        entries: result.entries,
+        truncated: result.truncated
+      });
+    } catch (error) {
+      if (error?.code === "ENOENT" || error?.code === "ENOTDIR"
+        || error?.code === "EACCES" || error?.code === "EPERM") {
+        sendJson(response, 503, { error: "No se pudo leer el directorio local." });
+        return;
+      }
+      console.error("No se pudo leer el explorador local del workspace.");
+      sendJson(response, 500, { error: "No se pudo consultar el directorio local." });
+    }
+    return;
+  }
+
   const workspacePreferencesRoute = requestUrl.pathname.match(
     /^\/api\/workspaces\/([^/]+)\/preferences$/
   );

@@ -17,6 +17,16 @@ import {
   Sparkles,
   X
 } from "lucide-react";
+import {
+  dashboardSortPreference,
+  getApiHealth,
+  getProjects,
+  getProjectPreferences,
+  getWorkspacePreferences,
+  patchProjectPreferences,
+  patchWorkspacePreferences,
+  rescanWorkspace
+} from "./api/client";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import ConsoleDashboardView from "./screens/ConsoleDashboardView";
 import ProjectDetailScreen from "./screens/ProjectDetailScreen";
@@ -26,11 +36,6 @@ import StudioNavigationBar from "./components/StudioNavigationBar";
 import DashboardViewSwitcher from "./components/DashboardViewSwitcher";
 import type { DashboardView, Project, StudioViewId } from "./types";
 
-type ProjectsResponse = {
-  projects: Project[];
-  error?: string;
-};
-
 const accents = ["violet", "peach", "mint", "blue"];
 
 type DashboardScreenProps = {
@@ -38,7 +43,7 @@ type DashboardScreenProps = {
   studioView: StudioViewId | null;
   dashboardView: DashboardView;
   onOpenProject: (project: Project) => void;
-  onOpenStudio: (project: Project) => void;
+  onOpenStudio: (project: Project, view: StudioViewId) => void;
   onBackToProject: (project: Project) => void;
   onBackToDashboard: () => void;
   onChangeDashboardView: (view: DashboardView) => void;
@@ -51,32 +56,140 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   const [flipped, setFlipped] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [apiNotice, setApiNotice] = useState("");
+  const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sortNewest, setSortNewest] = useState(true);
+  const sortWasChanged = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const projectGridRef = useRef<HTMLDivElement>(null);
   const projectsSectionRef = useRef<HTMLElement>(null);
   const returnToGridRef = useRef(false);
 
-  async function loadProjects() {
-    setLoading(true);
+  async function loadProjects(showLoading = true) {
+    if (showLoading) setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/projects");
-      const result = (await response.json()) as ProjectsResponse;
-      if (!response.ok) throw new Error(result.error || `No se pudieron leer los proyectos (${response.status}).`);
-      setProjects(result.projects);
+      setProjects(await getProjects());
       setFlipped([]);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudieron leer los proyectos locales.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }
 
   useEffect(() => {
     void loadProjects();
+    let active = true;
+    getApiHealth()
+      .then((health) => {
+        if (active) setApiHealthy(health.status === "ok" && health.database === "ok");
+      })
+      .catch((healthError: unknown) => {
+        if (!active) return;
+        setApiHealthy(false);
+        setApiNotice(healthError instanceof Error
+          ? `La API local no está disponible: ${healthError.message}`
+          : "La API local no está disponible.");
+      });
+    getWorkspacePreferences("workspace-demo")
+      .then((preferences) => {
+        if (!active) return;
+        if (!sortWasChanged.current && preferences.dashboard_sort) {
+          setSortNewest(preferences.dashboard_sort === "source_order");
+        }
+      })
+      .catch((preferencesError: unknown) => {
+        if (active) {
+          setApiNotice(preferencesError instanceof Error
+            ? `No se pudieron cargar las preferencias: ${preferencesError.message}`
+            : "No se pudieron cargar las preferencias del workspace.");
+        }
+      });
+    return () => { active = false; };
   }, []);
+
+  async function refreshWorkspace() {
+    if (scanning) return;
+    setScanning(true);
+    setApiNotice("");
+    try {
+      const scan = await rescanWorkspace("workspace-demo");
+      if (scan.complete) {
+        setApiNotice(`Índice actualizado: ${scan.projectCount} proyectos escaneados.`);
+      } else {
+        setApiNotice(
+          `Escaneo parcial. Se conserva el último snapshot válido de: ${scan.failedProjects.join(", ")}.`
+        );
+      }
+    } catch (scanError) {
+      setApiNotice(scanError instanceof Error
+        ? `No se pudo actualizar el índice: ${scanError.message}`
+        : "No se pudo actualizar el índice local.");
+    } finally {
+      await loadProjects(false);
+      setScanning(false);
+    }
+  }
+
+  function changeDashboardView(view: DashboardView) {
+    onChangeDashboardView(view);
+    void patchWorkspacePreferences("workspace-demo", { preferred_dashboard_view: view })
+      .then(() => setApiNotice(""))
+      .catch((preferenceError: unknown) => {
+        setApiNotice(preferenceError instanceof Error
+          ? `No se pudo guardar la vista del dashboard: ${preferenceError.message}`
+          : "No se pudo guardar la preferencia del dashboard.");
+      });
+  }
+
+  function changeSortOrder() {
+    const nextSortNewest = !sortNewest;
+    sortWasChanged.current = true;
+    setSortNewest(nextSortNewest);
+    void patchWorkspacePreferences("workspace-demo", {
+      dashboard_sort: dashboardSortPreference(nextSortNewest)
+    })
+      .then(() => setApiNotice(""))
+      .catch((preferenceError: unknown) => {
+        setApiNotice(preferenceError instanceof Error
+          ? `No se pudo guardar el orden: ${preferenceError.message}`
+          : "No se pudo guardar la preferencia de orden.");
+      });
+  }
+
+  async function editProject(project: Project) {
+    try {
+      const [projectPreferences, workspacePreferences] = await Promise.all([
+        getProjectPreferences(project.id),
+        getWorkspacePreferences("workspace-demo")
+      ]);
+      onOpenStudio(
+        project,
+        projectPreferences.preferred_studio_view
+          || workspacePreferences.preferred_studio_view
+          || "ide"
+      );
+    } catch (preferenceError) {
+      setApiNotice(preferenceError instanceof Error
+        ? `No se pudo cargar la vista preferida; se abrirá IDE: ${preferenceError.message}`
+        : "No se pudo cargar la vista preferida; se abrirá IDE.");
+      onOpenStudio(project, "ide");
+    }
+  }
+
+  function selectStudioView(project: Project, view: StudioViewId) {
+    onChangeStudioView(project, view);
+    void patchProjectPreferences(project.id, { preferred_studio_view: view })
+      .then(() => setApiNotice(""))
+      .catch((preferenceError: unknown) => {
+        setApiNotice(preferenceError instanceof Error
+          ? `No se pudo guardar la vista del proyecto: ${preferenceError.message}`
+          : "No se pudo guardar la vista del proyecto.");
+      });
+  }
 
   useEffect(() => {
     if (projectId) {
@@ -163,7 +276,13 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="local-status"><span className="status-pulse" /><span><strong>Solo local</strong><small>Tus archivos no salen de aquí</small></span></div>
+          <div className={`local-status${apiHealthy === false ? " local-status--error" : ""}`} role="status">
+            <span className="status-pulse" />
+            <span>
+              <strong>{apiHealthy === null ? "Conectando API" : apiHealthy ? "API local conectada" : "API local no disponible"}</strong>
+              <small>{apiHealthy ? "SQLite disponible · Solo local" : apiHealthy === false ? "Revisa el servicio local" : "Comprobando servicio local"}</small>
+            </span>
+          </div>
           <button className="sidebar-profile" type="button" onClick={copyPath}>
             <span className="profile-avatar">K</span><span><strong>Kaktus</strong><small>{copied ? "Ruta copiada" : "Directorio raíz"}</small></span>
             {copied ? <Check size={15} /> : <ArrowUpRight size={15} />}
@@ -175,10 +294,11 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
         {!projectId && <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-divider">/</span><strong>Proyectos</strong></div>
           <div className="topbar-right">
-            <DashboardViewSwitcher activeView={dashboardView} onChange={onChangeDashboardView} />
+            <DashboardViewSwitcher activeView={dashboardView} onChange={changeDashboardView} />
             <span className="local-badge"><span /> LOCAL WORKSPACE</span><span className="topbar-divider" /><button className="avatar-button" type="button" aria-label="Perfil Kaktus">K</button>
           </div>
         </header>}
+        {apiNotice && <div className="api-feedback" role="status">{apiNotice}</div>}
 
         {projectId ? (
           selectedProject ? (
@@ -188,7 +308,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
                   project={selectedProject}
                   activeView={studioView}
                   onBack={() => onBackToProject(selectedProject)}
-                  onChangeView={(view) => onChangeStudioView(selectedProject, view)}
+                  onChangeView={(view) => selectStudioView(selectedProject, view)}
                 />
                 <div className="studio-shell__view">
                   {studioView === "ide"
@@ -200,7 +320,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
               <ProjectDetailScreen
                 project={selectedProject}
                 onBack={onBackToDashboard}
-                onEdit={() => onOpenStudio(selectedProject)}
+                onEdit={() => void editProject(selectedProject)}
               />
             )
           ) : (
@@ -256,8 +376,8 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
               <div><div className="section-kicker">TU ESPACIO DE TRABAJO</div><h2>Proyectos <span className="heading-count">{loading ? "…" : projects.length}</span></h2></div>
               <div className="section-actions">
                 <label className="search-field"><Search size={16} strokeWidth={1.8} /><input ref={searchInputRef} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar proyecto..." aria-label="Buscar proyecto" /><kbd>Ctrl K</kbd></label>
-                <button className="icon-action" type="button" aria-label="Cambiar orden" title="Invertir orden" onClick={() => setSortNewest((current) => !current)}><ListFilter size={17} /><ArrowDown size={11} className="sort-arrow" /></button>
-                <button className={`icon-action refresh-button${loading ? " is-loading" : ""}`} type="button" aria-label="Actualizar proyectos" title="Volver a leer CaseUses" onClick={() => void loadProjects()} disabled={loading}><RotateCw size={16} /></button>
+                <button className="icon-action" type="button" aria-label="Cambiar orden" title="Invertir orden" onClick={changeSortOrder}><ListFilter size={17} /><ArrowDown size={11} className="sort-arrow" /></button>
+                <button className={`icon-action refresh-button${scanning ? " is-loading" : ""}`} type="button" aria-label="Reescanear workspace" title="Volver a escanear CaseUses" onClick={() => void refreshWorkspace()} disabled={loading || scanning}><RotateCw size={16} /></button>
               </div>
             </div>
 
@@ -356,8 +476,8 @@ function App() {
     setPathname(projectPath);
   }
 
-  function openStudio(project: Project) {
-    changeStudioView(project, "ide");
+  function openStudio(project: Project, view: StudioViewId) {
+    changeStudioView(project, view);
   }
 
   function changeStudioView(project: Project, view: StudioViewId) {

@@ -67,6 +67,36 @@ test("starts the API with an isolated SQLite database and keeps demo reads worki
     const demoProject = projects.find(({ id }) => id === "01-mini-store");
     assert.ok(demoProject);
     assert.equal(demoProject.title, "Mini Store");
+    const sourceBrowserResponse = await fetch(
+      `${baseUrl}/api/workspaces/workspace-demo/source-browser`
+    );
+    assert.equal(sourceBrowserResponse.status, 200);
+    const sourceBrowser = await sourceBrowserResponse.json();
+    assert.equal(sourceBrowser.rootName, "CaseUses");
+    assert.ok(sourceBrowser.rootPathSegments.length > 0);
+    assert.ok(sourceBrowser.entries.some(
+      ({ name, type }) => name === "01-mini-store" && type === "directory"
+    ));
+    assert.ok(sourceBrowser.entries.some(
+      ({ name, type }) => name === "README.md" && type === "file"
+    ));
+    assert.equal(JSON.stringify(sourceBrowser).includes(path.resolve(__dirname, "../../CaseUses")), false);
+    const nestedBrowserResponse = await fetch(
+      `${baseUrl}/api/workspaces/workspace-demo/source-browser?path=01-mini-store%2Fbackend`
+    );
+    assert.equal(nestedBrowserResponse.status, 200);
+    const nestedBrowser = await nestedBrowserResponse.json();
+    assert.ok(nestedBrowser.entries.some(({ name }) => name === "server.js"));
+    assert.equal(
+      (await fetch(
+        `${baseUrl}/api/workspaces/workspace-demo/source-browser?path=..%2F..`
+      )).status,
+      400
+    );
+    assert.equal(
+      (await fetch(`${baseUrl}/api/workspaces/missing-workspace/source-browser`)).status,
+      404
+    );
     const workspacePreferencesUrl = `${baseUrl}/api/workspaces/workspace-demo/preferences`;
     const initialWorkspacePreferences = await fetch(workspacePreferencesUrl);
     assert.equal(initialWorkspacePreferences.status, 200);

@@ -1,9 +1,11 @@
 # Arquitectura de información
 
-**Estado:** jerarquía de producto acordada para la siguiente etapa de
-persistencia.
-**Alcance:** define conceptos y responsabilidades; SQLite aún no está
-implementada.
+**Estado:** jerarquía conceptual implementada en el recorrido demo; la
+generalización de identidades, raíces y rutas está pendiente.
+**Alcance:** define conceptos y responsabilidades. SQLite y la API local ya
+persisten el workspace demo, snapshots y preferencias; consultar la
+[auditoría de taxonomía y datos](./auditoria-taxonomia-y-datos.md) para las
+diferencias entre el contrato y el código actual.
 
 ## Propósito del producto
 
@@ -28,10 +30,10 @@ identificarse como inferencia.
 | Componente | Elemento de UI reutilizable y limitado a una responsabilidad | Banner de datos, selector de vistas |
 | Análisis | Observaciones calculadas a partir de los archivos | Stack inferido, conteos |
 
-En el estado actual no existe una base persistente de Kaktus. La API lee el
-filesystem local. La siguiente etapa añadirá SQLite como índice reconstruible
-para metadata y preferencias, manteniendo los archivos como fuente de verdad;
-ver [modelo-de-datos.md](../data/modelo-de-datos.md) y la
+SQLite guarda un índice reconstruible de metadata y preferencias del workspace
+demo. La API lee contenido de archivos desde el filesystem bajo demanda, que
+continúa siendo la fuente de verdad; ver
+[modelo-de-datos.md](../data/modelo-de-datos.md) y la
 [hoja de ruta backend](../roadmap/sqlite-y-backend.md).
 
 ## Jerarquía principal
@@ -99,12 +101,17 @@ una selección real. La acción de demo es una ruta explícita alternativa.
 
 ### Vista multipista del Studio
 
-1. Panel superior de preview, vacío salvo marco, icono y título.
-2. Panel superior de directorio/recursos, vacío salvo marco, icono y título.
-3. Panel inferior ancho completo titulado **Multipista**, con retícula, filas y
-   bloques de color como placeholders.
-4. Sin timestamps, etiquetas descriptivas, filtros o controles; reproducción y
-   edición de medios no están conectadas.
+1. Preview y Directorio quedan colapsados a encabezados con icono y título.
+2. El timeline **Multipista** ocupa el área principal y muestra seis canales de
+   muestra en una grilla de nueve columnas, unidad abstracta sin timestamps.
+3. Cada canal tiene un solo bloque sólido con longitud inicial de tres columnas;
+   el acordeón expande uno a la vez únicamente en vertical y conserva esa longitud,
+   revelando una card vacía de altura fija e independiente del ancho, sin rejilla
+   decorativa interior. El tema sólido es inicial y el cristal es opcional.
+4. El ancho y la posición horizontal en la grilla son preferencias locales por
+   proyecto, ajustables por separado con handlers de arrastre y flechas del teclado.
+5. Canales y lienzos son mock; no representan widgets reales ni ofrecen
+   reproducción o edición de medios.
 
 ## Hechos, inferencias y simulaciones
 

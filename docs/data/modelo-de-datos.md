@@ -2,7 +2,10 @@
 
 **Estado:** el workspace `CaseUses/`, escaneo inicial/manual, lectura de
 listado/árbol desde snapshots SQLite y endpoints de preferencias están
-implementados. El frontend aún no consume preferencias ni reescaneo.
+implementados y conectados al dashboard/Studio; el recorrido visual de
+reescaneo y persistencia quedó verificado. La alineación de IDs, rutas y
+preferencias de dashboard antes de generalizar el producto está registrada en
+la [auditoría de taxonomía y datos](../product/auditoria-taxonomia-y-datos.md).
 
 ## Decisiones de arquitectura
 
@@ -209,6 +212,10 @@ No modificar a mano una base ya creada ni borrar datos para aplicar un cambio.
   escaneo completo. El usuario puede pedir reescaneo; no se hace crawling
   recursivo en cada petición de lista. El API local ofrece
   `POST /api/workspaces/:id/scan` para actualizar el índice explícitamente.
+- El onboarding consulta `GET /api/workspaces/:id/source-browser?path=...` para
+  explorar directorios/archivos reales dentro de la raíz registrada. El
+  endpoint no devuelve la ruta absoluta del host, omite symlinks y valida que
+  la navegación permanezca dentro de la raíz. No permite elegir otra raíz.
 - Workspace: `GET/PATCH /api/workspaces/:id/preferences`.
 - Proyecto: `GET/PATCH /api/projects/:id/preferences`.
 - Solo se aceptan valores de los catálogos
@@ -229,7 +236,7 @@ No modificar a mano una base ya creada ni borrar datos para aplicar un cambio.
 | Resumen de proyecto | Ruta del proyecto | Ninguna vista adicional | Scroll/retorno |
 | Studio | `ide`, `multipista` | Default del workspace y override por proyecto | Ruta activa, paneles abiertos |
 | Editor IDE | Ruta relativa del archivo | Último archivo seleccionado opcional por proyecto | Contenido abierto en memoria |
-| Onboarding | Demo/local/remoto | No persistir conexión mock | Modal y estado de la demo |
+| Onboarding | Demo/local/remoto | No persistir conexión mock | Navegación de carpetas dentro de la raíz fijada |
 
 La tercera opción bloqueada no se guarda como preferencia válida. Validar cada
 ID contra el catálogo al escribir y al leer.
@@ -258,8 +265,9 @@ métricas simuladas. No requiere tablas configurables de vistas.
    directorio de repositorios no se restringe al directorio de DB.
 3. **Retención de escaneos:** mantener snapshots previos en MVP para preservar
    el último correcto; definir más adelante política de limpieza/cantidad.
-4. **Preferencias de proyecto:** confirmar si recordar archivo activo es útil;
-   es nullable y se puede omitir del primer endpoint sin alterar el modelo.
+4. **Preferencias de proyecto:** la preferencia de archivo activo se persiste y
+   se restaura en el IDE; continúa siendo nullable y se valida contra el último
+   snapshot completo.
 
 Los demás límites para el siguiente incremento están fijados en la
 [hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).
