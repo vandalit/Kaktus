@@ -99,7 +99,7 @@ function detectStack(packageInfo, fileTypes, directory) {
     if (dependencies.express) stack.add("Express");
     if (dependencies["better-sqlite3"] || dependencies.sqlite3) stack.add("SQLite");
   }
-  if (stack.has("HTML") && stack.has("CSS") && stack.has("JavaScript")) {
+  if (packageInfo && stack.has("HTML") && stack.has("CSS") && stack.has("JavaScript")) {
     stack.add("Web");
   }
   if (!packageInfo && fileTypes.includes("HTML")) {

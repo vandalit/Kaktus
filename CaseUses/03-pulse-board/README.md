@@ -1,8 +1,8 @@
 # 03 · Pulse Board
 
-A small project-management dashboard for a product team. It is a client-side
-web app with a Kanban board, search, status filters, task creation/editing and
-local browser persistence.
+Tablero de gestión de proyectos para un equipo de producto, ejecutado en el
+navegador. Incluye vista Kanban, búsqueda, filtros, edición de tareas y
+persistencia local.
 
 ## Run locally
 

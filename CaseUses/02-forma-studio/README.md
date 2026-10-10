@@ -1,8 +1,8 @@
 # 02 · Forma Studio
 
-A static, multi-view creative-studio site. It uses original CSS artwork,
-transitions and motion effects—no copied CodePen snippets or JavaScript
-dependencies.
+Sitio creativo estático de varias vistas, con composiciones originales,
+transiciones y animaciones CSS. No depende de fragmentos de CodePen ni de
+librerías JavaScript.
 
 ## Run locally
 

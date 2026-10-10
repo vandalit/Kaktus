@@ -1,8 +1,8 @@
 # 01 · Mini Store
 
-A tiny full-stack shop: a static Bootstrap storefront, a Node HTTP API and a
-SQLite database. The browser keeps the active cart in local storage; completed
-orders and stock changes are stored in SQLite on this machine.
+Tienda full-stack mínima: vitrina estática con Bootstrap, API local en Node y
+base SQLite. El navegador conserva el carrito; los pedidos y descuentos de
+stock se registran en esta máquina.
 
 ## Run locally
 
