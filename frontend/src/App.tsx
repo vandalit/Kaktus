@@ -37,6 +37,27 @@ import DashboardViewSwitcher from "./components/DashboardViewSwitcher";
 import type { DashboardView, Project, StudioViewId } from "./types";
 
 const accents = ["violet", "peach", "mint", "blue"];
+const isPagesDemo = import.meta.env.MODE === "pages";
+const pagesDemoProject: Project = {
+  id: "01-mini-store",
+  title: "Mini Store",
+  description: "Proyecto de muestra para explorar la vista Multipista.",
+  folders: 0,
+  files: 0,
+  stack: ["React", "TypeScript"],
+  projectType: "Frontend"
+};
+
+function appPath(pathname: string) {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  if (!basePath) return pathname;
+  if (pathname === basePath || pathname === `${basePath}/`) return "/";
+  return pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : pathname;
+}
+
+function publicPath(pathname: string) {
+  return `${import.meta.env.BASE_URL.replace(/\/$/, "")}${pathname}`;
+}
 
 type DashboardScreenProps = {
   projectId: string | null;
@@ -68,6 +89,11 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   const returnToGridRef = useRef(false);
 
   async function loadProjects(showLoading = true) {
+    if (isPagesDemo) {
+      setProjects([pagesDemoProject]);
+      setLoading(false);
+      return;
+    }
     if (showLoading) setLoading(true);
     setError("");
     try {
@@ -81,6 +107,13 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   }
 
   useEffect(() => {
+    if (isPagesDemo) {
+      setProjects([pagesDemoProject]);
+      setLoading(false);
+      setApiHealthy(false);
+      setApiNotice("DEMO ESTÁTICA · El proyecto es de muestra; filesystem y API local no están disponibles en GitHub Pages.");
+      return;
+    }
     void loadProjects();
     let active = true;
     getApiHealth()
@@ -257,7 +290,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   return (
     <div className={`app-shell${studioView ? " app-shell--studio" : ""}`}>
       <aside className={`sidebar${studioView ? " sidebar--compact" : ""}`}>
-        <a className="brand" href="/" aria-label="Kaktus, inicio">
+        <a className="brand" href={import.meta.env.BASE_URL} aria-label="Kaktus, inicio">
           <span className="brand-mark"><span /></span>
           <span className="brand-word">Kaktus</span>
           <span className="brand-beta">LAB</span>
@@ -439,14 +472,22 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
 }
 
 function App() {
-  const [pathname, setPathname] = useState(() => window.location.pathname);
+  const [pathname, setPathname] = useState(() => {
+    const currentPath = appPath(window.location.pathname);
+    return isPagesDemo && currentPath === "/"
+      ? "/workspaces/demo/projects/01-mini-store/studio/multipista"
+      : currentPath;
+  });
   const [dashboardView, setDashboardView] = useState<DashboardView>(() =>
-    window.location.pathname.endsWith("/console") ? "console" : "projects"
+    appPath(window.location.pathname).endsWith("/console") ? "console" : "projects"
   );
 
   useEffect(() => {
+    if (isPagesDemo && appPath(window.location.pathname) === "/") {
+      window.history.replaceState({}, "", publicPath(pathname));
+    }
     function syncPathname() {
-      const nextPathname = window.location.pathname;
+      const nextPathname = appPath(window.location.pathname);
       setPathname(nextPathname);
       if (nextPathname.startsWith("/workspaces/demo/dashboard/")) {
         setDashboardView(nextPathname.endsWith("/console") ? "console" : "projects");
@@ -458,21 +499,21 @@ function App() {
 
   function connectDemo() {
     const dashboardPath = "/workspaces/demo/dashboard/projects";
-    window.history.pushState({}, "", dashboardPath);
+    window.history.pushState({}, "", publicPath(dashboardPath));
     setDashboardView("projects");
     setPathname(dashboardPath);
   }
 
   function changeDashboardView(view: DashboardView) {
     const dashboardPath = `/workspaces/demo/dashboard/${view}`;
-    window.history.pushState({}, "", dashboardPath);
+    window.history.pushState({}, "", publicPath(dashboardPath));
     setDashboardView(view);
     setPathname(dashboardPath);
   }
 
   function openProject(project: Project) {
     const projectPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}`;
-    window.history.pushState({}, "", projectPath);
+    window.history.pushState({}, "", publicPath(projectPath));
     setPathname(projectPath);
   }
 
@@ -482,19 +523,19 @@ function App() {
 
   function changeStudioView(project: Project, view: StudioViewId) {
     const studioPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}/studio/${view}`;
-    window.history.pushState({}, "", studioPath);
+    window.history.pushState({}, "", publicPath(studioPath));
     setPathname(studioPath);
   }
 
   function backToProject(project: Project) {
     const projectPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}`;
-    window.history.pushState({}, "", projectPath);
+    window.history.pushState({}, "", publicPath(projectPath));
     setPathname(projectPath);
   }
 
   function backToDashboard() {
     const dashboardPath = `/workspaces/demo/dashboard/${dashboardView}`;
-    window.history.pushState({}, "", dashboardPath);
+    window.history.pushState({}, "", publicPath(dashboardPath));
     setPathname(dashboardPath);
   }
 

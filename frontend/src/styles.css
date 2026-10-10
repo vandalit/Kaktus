@@ -936,6 +936,8 @@ h1 span { color: var(--color-accent); }
   .multitrack-track { flex-basis: 68px; }
   .multitrack-track__lane { padding: 8px; }
   .multitrack-clip { height: 44px; }
+  .multitrack-timeline__toolbar-actions { gap: 3px; }
+  .multitrack-timeline__action, .multitrack-timeline__theme-toggle { padding-left: 5px; padding-right: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

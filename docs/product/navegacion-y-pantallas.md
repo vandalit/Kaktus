@@ -184,6 +184,8 @@ que abre el Studio y no debe activarse al usar el retorno.
   permanecer abiertos. La card tiene 320 px de altura fija, independiente del
   ancho, y no lleva rejilla decorativa. El estado se persiste localmente por
   proyecto.
+- La barra del timeline permite expandir todas las pistas o comprimirlas todas,
+  con acciones deshabilitadas cuando ya se alcanzó ese estado.
 - Las barras compactas tienen 48 px de alto, con canales de 76 px apilados.
   Arrastrar el cuerpo mueve horizontalmente con snap a columnas; arrastrar los
   bordes ajusta inicio o fin. Click/tap expande; el teclado ofrece movimiento y
