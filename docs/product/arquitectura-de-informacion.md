@@ -21,14 +21,16 @@ identificarse como inferencia.
 | Archivo o carpeta | Elemento del filesystem perteneciente a un proyecto | `frontend/src/App.tsx` |
 | Identidad | Referencia estable a una entidad, independiente de su título o posición | ID derivado de raíz + ruta relativa |
 | Dashboard | Contexto de resumen y comparación de los proyectos del workspace | Panel de proyectos |
-| Vista | Representación de un contexto, no una entidad diferente | Tarjetas, IDE clásico |
+| Vista | Representación de un contexto, no una entidad diferente | Tarjetas, Studio IDE |
+| Studio | Espacio de trabajo de un proyecto, separado del dashboard y de su resumen | Studio del proyecto |
 | Ítem | Representación seleccionable de una entidad en una vista | Tarjeta de proyecto, nodo del árbol |
 | Componente | Elemento de UI reutilizable y limitado a una responsabilidad | Banner de datos, selector de vistas |
 | Análisis | Observaciones calculadas a partir de los archivos | Stack inferido, conteos |
 
 No existe actualmente una base de datos persistente de Kaktus. El filesystem es
-la fuente de verdad; la API local lee resúmenes bajo `CaseUses/`. El modelo de
-datos futuro se especifica en [modelo-de-datos.md](../data/modelo-de-datos.md).
+la fuente de verdad; la API local lee metadatos y archivos permitidos bajo
+`CaseUses/`. El modelo de datos futuro se especifica en
+[modelo-de-datos.md](../data/modelo-de-datos.md).
 
 ## Jerarquía principal
 
@@ -41,14 +43,18 @@ Kaktus
             │   ├── Vista: Proyectos
             │   └── Vista: En construcción
             └── Proyecto enfocado
-                ├── Vista: IDE clásico
-                └── Vista: En construcción
+                ├── Resumen de proyecto
+                └── Studio
+                    ├── Vista: IDE
+                    ├── Vista: Multipista
+                    └── Vista futura: bloqueada
 ```
 
-Las dos opciones llamadas **En construcción** pertenecen a contextos distintos.
-En Figma y en la implementación deberán tener nombres internos diferenciados,
-por ejemplo `dashboard.overview-preview` y `project.topology-preview`, aunque
-su rótulo visible pueda ser igual.
+Las perspectivas del dashboard y del Studio pertenecen a contextos distintos.
+Las opciones futuras pueden compartir el rótulo **En construcción**, pero sus
+IDs deben ser propios de cada contexto. El resumen del proyecto y el Studio son
+destinos distintos: desde el resumen se entra al Studio y desde el IDE se
+regresa al mismo resumen.
 
 ## Jerarquía de información por contexto
 
@@ -74,12 +80,27 @@ una selección real. La acción de demo es una ruta explícita alternativa.
 
 ### Vista de proyecto
 
-1. Breadcrumbs: workspace → proyecto.
-2. Identidad y resumen del proyecto.
-3. Selector de vistas de proyecto.
-4. Vista IDE clásico: árbol/directorio, listado de elementos del directorio y
-   detalle del archivo seleccionado.
-5. Indicadores de fuente, estado de análisis e interacción simulada.
+1. Resumen: breadcrumbs workspace → proyecto, identidad, metadatos y señales
+   claramente marcadas como reales, inferidas o mock.
+2. Acción **Editar proyecto** que abre el Studio del mismo proyecto.
+
+### Studio del proyecto
+
+1. Breadcrumbs: workspace → proyecto → Studio.
+2. Barra superior compartida con selector IDE, Multipista y perspectiva futura
+   bloqueada; rail lateral compacto.
+3. Explorador con el árbol real del filesystem del proyecto.
+4. Editor de texto del archivo activo, solo lectura en esta fase.
+5. Terminal y chat diferenciados como simulaciones no conectadas.
+6. Indicadores de fuente local, límites de lectura y retorno al resumen.
+
+### Vista multipista del Studio
+
+1. Panel superior de preview.
+2. Panel superior de directorio/recursos.
+3. Timeline inferior ancho completo con encabezados y filas de pista.
+4. Bloques de color como placeholders; reproducción y edición de medios no
+   están conectadas.
 
 ## Hechos, inferencias y simulaciones
 

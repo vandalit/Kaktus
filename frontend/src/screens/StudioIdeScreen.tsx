@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import {
-  ArrowLeft,
   Bot,
   ChevronDown,
   ChevronRight,
@@ -19,7 +18,6 @@ import type { Project, ProjectTreeEntry } from "../types";
 
 type StudioIdeScreenProps = {
   project: Project;
-  onBack: () => void;
 };
 
 type ProjectTreeResponse = {
@@ -50,7 +48,7 @@ function firstFile(entries: ProjectTreeEntry[]): string | null {
   return null;
 }
 
-function StudioIdeScreen({ project, onBack }: StudioIdeScreenProps) {
+function StudioIdeScreen({ project }: StudioIdeScreenProps) {
   const [tree, setTree] = useState<ProjectTreeEntry[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
   const [treeError, setTreeError] = useState("");
@@ -194,20 +192,6 @@ function StudioIdeScreen({ project, onBack }: StudioIdeScreenProps) {
 
   return (
     <section className="studio-ide" aria-label={`Studio IDE de ${project.title}`}>
-      <header className="studio-ide__header">
-        <button className="studio-ide__back" type="button" onClick={onBack}>
-          <ArrowLeft size={15} />
-          <span>Resumen del proyecto</span>
-        </button>
-        <div className="studio-ide__breadcrumb" aria-label="Ubicación actual">
-          <span>Workspace demo</span><span>/</span><span>{project.title}</span><span>/</span><strong>Studio · IDE</strong>
-        </div>
-        <div className="studio-ide__badges">
-          <span className="studio-ide__local"><i /> LOCAL</span>
-          <span className="studio-ide__readonly">SOLO LECTURA</span>
-        </div>
-      </header>
-
       <div className="studio-ide__notice" role="note">
         <Workflow size={15} />
         <span>
@@ -222,11 +206,11 @@ function StudioIdeScreen({ project, onBack }: StudioIdeScreenProps) {
             <span>EXPLORADOR</span>
             <span>{project.files.toString().padStart(2, "0")} ARCHIVOS</span>
           </div>
-          <button className="studio-tree__root" type="button" aria-label={`Raíz del proyecto ${project.id}`}>
+          <div className="studio-tree__root" aria-label={`Raíz del proyecto ${project.id}`}>
             <ChevronDown size={13} />
             <FolderOpen size={15} />
             <strong>{project.id}</strong>
-          </button>
+          </div>
           {treeLoading && <div className="studio-state"><span className="studio-spinner" /> Leyendo carpeta...</div>}
           {!treeLoading && treeError && <div className="studio-state studio-state--error" role="alert"><CircleAlert size={15} />{treeError}</div>}
           {!treeLoading && !treeError && tree.length === 0 && <div className="studio-state">La carpeta está vacía.</div>}

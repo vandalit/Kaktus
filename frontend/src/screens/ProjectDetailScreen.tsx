@@ -59,7 +59,7 @@ function ProjectDetailScreen({ project, onBack, onEdit }: ProjectDetailScreenPro
           </div>
           <button className="project-edit-button" type="button" onClick={onEdit}>
             <PencilLine size={17} />
-            <span><strong>Editar proyecto</strong><small>Interacción de demostración</small></span>
+            <span><strong>Editar proyecto</strong><small>Abrir Studio · IDE</small></span>
             <ArrowRight size={17} />
           </button>
         </section>

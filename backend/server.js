@@ -249,7 +249,13 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    const projectDirectoryName = decodeURIComponent(projectRoute[1]);
+    let projectDirectoryName;
+    try {
+      projectDirectoryName = decodeURIComponent(projectRoute[1]);
+    } catch {
+      sendJson(response, 400, { error: "El identificador del proyecto no es válido." });
+      return;
+    }
     const projectDirectory = await getProjectDirectory(projectDirectoryName);
     if (!projectDirectory) {
       sendJson(response, 404, { error: "No se encontró el proyecto solicitado." });

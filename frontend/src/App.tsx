@@ -21,8 +21,10 @@ import OnboardingScreen from "./screens/OnboardingScreen";
 import ConsoleDashboardView from "./screens/ConsoleDashboardView";
 import ProjectDetailScreen from "./screens/ProjectDetailScreen";
 import StudioIdeScreen from "./screens/StudioIdeScreen";
+import StudioMultitrackScreen from "./screens/StudioMultitrackScreen";
+import StudioNavigationBar from "./components/StudioNavigationBar";
 import DashboardViewSwitcher from "./components/DashboardViewSwitcher";
-import type { DashboardView, Project } from "./types";
+import type { DashboardView, Project, StudioViewId } from "./types";
 
 type ProjectsResponse = {
   projects: Project[];
@@ -33,15 +35,17 @@ const accents = ["violet", "peach", "mint", "blue"];
 
 type DashboardScreenProps = {
   projectId: string | null;
+  studioView: StudioViewId | null;
   dashboardView: DashboardView;
   onOpenProject: (project: Project) => void;
   onOpenStudio: (project: Project) => void;
   onBackToProject: (project: Project) => void;
   onBackToDashboard: () => void;
   onChangeDashboardView: (view: DashboardView) => void;
+  onChangeStudioView: (project: Project, view: StudioViewId) => void;
 };
 
-function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, onOpenStudio, onBackToProject, onBackToDashboard, onChangeDashboardView }: DashboardScreenProps & { studioView: boolean }) {
+function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, onOpenStudio, onBackToProject, onBackToDashboard, onChangeDashboardView, onChangeStudioView }: DashboardScreenProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState("");
   const [flipped, setFlipped] = useState<string[]>([]);
@@ -73,7 +77,7 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [projectId]);
+  }, [projectId, studioView]);
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
@@ -123,11 +127,11 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
   const selectedProject = projects.find((project) => project.id === projectId) ?? null;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <div className={`app-shell${studioView ? " app-shell--studio" : ""}`}>
+      <aside className={`sidebar${studioView ? " sidebar--compact" : ""}`}>
         <a className="brand" href="/" aria-label="Kaktus, inicio">
           <span className="brand-mark"><span /></span>
-          <span>Kaktus</span>
+          <span className="brand-word">Kaktus</span>
           <span className="brand-beta">LAB</span>
         </a>
 
@@ -164,10 +168,19 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
         {projectId ? (
           selectedProject ? (
             studioView ? (
-              <StudioIdeScreen
-                project={selectedProject}
-                onBack={() => onBackToProject(selectedProject)}
-              />
+              <div className="studio-shell">
+                <StudioNavigationBar
+                  project={selectedProject}
+                  activeView={studioView}
+                  onBack={() => onBackToProject(selectedProject)}
+                  onChangeView={(view) => onChangeStudioView(selectedProject, view)}
+                />
+                <div className="studio-shell__view">
+                  {studioView === "ide"
+                    ? <StudioIdeScreen project={selectedProject} />
+                    : <StudioMultitrackScreen project={selectedProject} />}
+                </div>
+              </div>
             ) : (
               <ProjectDetailScreen
                 project={selectedProject}
@@ -286,7 +299,6 @@ function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, 
           <footer className="page-footer"><span><span className="footer-status" /> Kaktus lee el workspace en modo local</span><span>HECHO PARA ENTENDER, NO SOLO PARA VER <span className="footer-star">✳</span></span></footer>
         </div>}
       </main>
-      {notice && <div className="notice-toast" role="status" aria-live="polite">{notice}</div>}
     </div>
   );
 }
@@ -330,7 +342,11 @@ function App() {
   }
 
   function openStudio(project: Project) {
-    const studioPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}/studio/ide`;
+    changeStudioView(project, "ide");
+  }
+
+  function changeStudioView(project: Project, view: StudioViewId) {
+    const studioPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}/studio/${view}`;
     window.history.pushState({}, "", studioPath);
     setPathname(studioPath);
   }
@@ -347,9 +363,9 @@ function App() {
     setPathname(dashboardPath);
   }
 
-  const projectRoute = pathname.match(/^\/workspaces\/demo\/projects\/([^/]+)(?:\/(studio\/ide))?$/);
+  const projectRoute = pathname.match(/^\/workspaces\/demo\/projects\/([^/]+)(?:\/studio\/(ide|multipista))?$/);
   const projectId = projectRoute ? decodeURIComponent(projectRoute[1]) : null;
-  const studioView = projectRoute?.[2] === "studio/ide";
+  const studioView = (projectRoute?.[2] as StudioViewId | undefined) ?? null;
 
   if (pathname.startsWith("/workspaces/demo/dashboard/") || projectId) {
     return (
@@ -362,6 +378,7 @@ function App() {
         onBackToProject={backToProject}
         onBackToDashboard={backToDashboard}
         onChangeDashboardView={changeDashboardView}
+        onChangeStudioView={changeStudioView}
       />
     );
   }

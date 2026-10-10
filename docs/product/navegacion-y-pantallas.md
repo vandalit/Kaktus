@@ -38,14 +38,15 @@ Ejemplos:
 /workspaces/demo/dashboard/overview-preview
 /workspaces/demo/projects/01-mini-store
 /workspaces/demo/projects/01-mini-store/studio/ide
-/workspaces/demo/projects/01-mini-store/topology-preview
+/workspaces/demo/projects/01-mini-store/studio/multipista
 ```
 
 IDs de vista estables y distintos por contexto:
 
 - Dashboard: `projects` (bento actual, predeterminado) y `console` (modo
   técnico brutalista, experimental).
-- Studio: `ide` (primera vista) y perspectivas futuras como `topology-preview`.
+- Studio: `ide` (predeterminada) y `multipista`. Una tercera perspectiva se
+  muestra bloqueada como **En construcción** hasta definir su alcance.
 
 Los rótulos `En construcción` pueden repetirse; IDs y componentes internos no.
 El ID de proyecto debe derivarse del origen y la ruta relativa, no del título
@@ -75,10 +76,12 @@ adopta router, el estado deberá derivarse de sus parámetros.
 | Abrir Kaktus | cualquiera | onboarding | La primera entrada sin workspace activo abre `/` |
 | Continuar con demo | onboarding | dashboard demo | Navega al workspace que representa `CaseUses/`; marcar el origen como demo local |
 | Cambiar modo de dashboard | dashboard | dashboard | Cambia solo `dashboardViewId`; conserva `workspaceId` |
-| Abrir tarjeta en `projects` | dashboard `projects` | proyecto | Conserva workspace; establece `projectId` y abre `classic-ide` |
+| Abrir tarjeta en `projects` | dashboard `projects` | resumen del proyecto | Conserva workspace y establece `projectId` |
 | Expandir fila en `console` | dashboard `console` | dashboard `console` | Expande/cierra resumen dentro del listado; no cambia ruta ni abre detalle del proyecto |
-| Cambiar vista de proyecto | proyecto | proyecto | Cambia solo `projectViewId`; conserva proyecto |
-| Volver al dashboard | proyecto | dashboard | Regresa al modo previo si es válido; de otro modo usa `projects` |
+| Editar proyecto | resumen del proyecto | Studio IDE | Conserva proyecto y abre `/studio/ide`; la vista actual es de solo lectura |
+| Volver al resumen | Studio | resumen del proyecto | Conserva proyecto; no salta directamente al dashboard |
+| Volver al dashboard | resumen del proyecto | dashboard | Regresa al modo previo si es válido; de otro modo usa `projects` |
+| Cambiar vista de Studio | Studio | Studio | Cambia solo `studioViewId`; conserva workspace y proyecto |
 | Atrás / adelante | cualquier ruta | ruta del historial | Sincroniza vista y contexto desde URL |
 | Ruta o entidad desconocida | cualquiera | estado no encontrado | Mostrar error explícito con camino de retorno, nunca fallback silencioso a otro proyecto |
 
@@ -120,29 +123,42 @@ workspace que Kaktus ya puede leer.
   Monitores/salud/conexiones son mock etiquetado. No navega a la vista de detalle
   de `projects`; solo se permite una fila expandida a la vez.
 
-### P2 — Proyecto / IDE clásico
+### P2 — Resumen de proyecto
 
-La pantalla de detalle/resumen ya está maquetada dentro del canvas persistente
-del dashboard: mantiene sidebar y oculta la topbar global, con breadcrumb
-contextual y retorno a Proyectos. El detalle usa resumen, métricas y stack
-disponibles, además de monitores/conexiones mock.
+La pantalla de resumen está maquetada dentro del canvas y mantiene el sidebar.
+Expone descripción, métricas de archivos y stack local, además de
+monitores/conexiones mock. **Editar proyecto** es la transición explícita al
+Studio; no afirma que ya se puedan guardar cambios.
 
-- Breadcrumb de workspace y proyecto, selector de perspectivas y retorno.
-- Panel de árbol con carpetas/archivos reales.
-- Panel de contenido del directorio seleccionado o listado según jerarquía
-  definida en Figma.
-- Panel de detalle/editor para el archivo activo.
-- Banner de fuente local; estado de archivo seleccionado; acción de edición
-  etiquetada como simulada mientras no exista escritura deliberada.
-- Límite: implementar primero lectura real. No inferir contenido ni habilitar
-  modificación de archivos por accidente.
+### P3 — Studio / IDE
 
-### P3 — Proyecto / Vista en construcción
+- Ruta propia dentro del proyecto:
+  `/workspaces/:workspaceId/projects/:projectId/studio/ide`.
+- Conserva un rail lateral de navegación compacto y una barra superior común
+  al Studio, con contexto del proyecto y un selector de tres posiciones:
+  `IDE`, `Multipista` y una perspectiva bloqueada.
+- Explorador recursivo del filesystem real, limitado a la raíz del proyecto.
+- Editor de texto de solo lectura: el archivo activo se solicita al seleccionar
+  un archivo; no se escribe a disco.
+- Terminal visible como maqueta, identificada como `MOCK`, sin ejecutar comandos.
+- Chat acepta mensajes para probar el estado de espera y responde
+  **“No disponible en esta demo”** después de 10 segundos. No conecta a un
+  servicio de IA.
+- Banners y estados distinguen lectura local real de terminal/chat simulados.
+- No se leen enlaces simbólicos ni archivos mayores a 1 MB; errores de lectura
+  se muestran en el panel afectado.
 
-- Mantiene navegación y contexto del proyecto.
-- Explica que es otra perspectiva, no un segundo proyecto ni otra vista de
-  dashboard.
-- Permite cambiar a IDE clásico y regresar al dashboard.
+### P4 — Studio / Multipista
+
+- Ruta: `/workspaces/:workspaceId/projects/:projectId/studio/multipista`.
+- Mantiene rail y barra superior compartidos con IDE, conservando el proyecto.
+- Skeleton modular con preview y directorio en la zona superior, y timeline
+  multipista a ancho completo abajo.
+- El timeline presenta encabezados de tiempo/columnas, filas y bloques de color
+  en layout bento. Está marcado como maqueta; no reproduce ni edita medios.
+- La tercera posición del selector sigue bloqueada, con tooltip explicativo.
+- Los scrollbars del editor y timeline se ocultan visualmente, conservando
+  desplazamiento por rueda, touchpad y gesto táctil.
 
 ### Estados compartidos
 

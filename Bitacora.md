@@ -232,6 +232,52 @@ abrir una vista de proyecto. El contenido de dashboard permanece concentrado en
   overflow horizontal a 390 px.
 - `npm --prefix frontend run build` y `git diff --check` pasan.
 
+### Avance frontend: Studio / IDE
+
+- Se formaliza una jerarquía de cuatro niveles: onboarding, dashboard del
+  workspace, resumen de proyecto y Studio del proyecto.
+- Las tarjetas abren el resumen en `/workspaces/demo/projects/:projectId`.
+  **Editar proyecto** abre `/workspaces/demo/projects/:projectId/studio/ide`;
+  el retorno desde Studio vuelve al resumen, no directamente al dashboard.
+- El Studio presenta un explorador del árbol real y contenido de texto local en
+  solo lectura. El API limita la lectura a carpetas de `CaseUses/`, omite
+  directorios ignorados y enlaces simbólicos, rechaza traversal y archivos
+  mayores a 1 MB.
+- La terminal es visual y no ejecuta comandos. El chat no está conectado: al
+  enviar un mensaje muestra espera durante 10 segundos y responde que no está
+  disponible.
+- Los estilos del IDE se adaptan a móvil y mantienen explorador, editor,
+  terminal y chat como paneles diferenciados.
+- Documentación de navegación y lógica del producto actualizada para reflejar
+  el nivel de Studio, sus rutas y el límite de solo lectura.
+- Verificación local: el API lista el árbol real y lee archivos de Mini Store;
+  traversal fuera de la raíz devuelve `400`. En navegador se validó el flujo
+  resumen → Studio → resumen, selección de `README.md`, los tres paneles,
+  responsive a 390 px sin overflow y respuesta del chat tras 10 segundos.
+- `npm --prefix frontend run build`, `node --check backend/server.js` y
+  `git diff --check` pasan.
+
+### Ajustes del Studio: rail, vistas y multipista
+
+- Al entrar a un proyecto en Studio, el sidebar pasa a rail compacto lateral con
+  iconos; el dashboard y el resumen conservan su navegación original.
+- Se añadió barra superior compartida con proyecto, retorno al resumen y
+  selector segmentado de tres posiciones: `IDE`, `Multipista` y `En construcción`
+  bloqueada con tooltip.
+- `Multipista` es una vista propia dentro del Studio, con componentes separados
+  para Preview, Directorio y Timeline. Presenta dos paneles superiores y una
+  zona multipista de ancho completo con ruler, columnas, filas y clips coloreados.
+  La interacción de medios sigue mock y los controles están deshabilitados.
+- Se ocultan visualmente los scrollbars del editor, explorador y timeline sin
+  quitar el desplazamiento nativo.
+- Documentos de arquitectura de información, UX, navegación y lógica del
+  producto actualizados para distinguir las dos vistas habilitadas del Studio.
+- Verificación de interfaz: rail lateral de 62 px; el toggle alterna rutas IDE y
+  Multipista, mientras que la tercera opción no cambia el destino. El editor
+  admite scroll horizontal/vertical programático con barras ocultas; timeline
+  muestra su ruler alineado, paneles y filas sin overflow horizontal del canvas.
+- `npm --prefix frontend run build` y `git diff --check` pasan.
+
 ## Cómo ejecutar localmente
 
 Desde la raíz del workspace, en dos terminales:

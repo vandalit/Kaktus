@@ -9,6 +9,7 @@ export type Project = {
 };
 
 export type DashboardView = "projects" | "console";
+export type StudioViewId = "ide" | "multipista";
 
 export type ProjectTreeEntry = {
   name: string;

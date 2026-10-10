@@ -31,9 +31,15 @@ Inicio / onboarding
       └── Dashboard: Proyectos
           ├── Cambiar vista del dashboard
           └── Abrir proyecto
-              ├── IDE clásico
-              ├── Vista de proyecto en construcción
-              └── Volver al dashboard
+              └── Resumen del proyecto
+                  ├── Editar proyecto → Studio / IDE
+                  │   ├── Explorador y editor de solo lectura
+                  │   ├── Terminal mock
+                  │   └── Chat mock con respuesta diferida
+                  ├── Studio / Multipista
+                  │   ├── Preview y directorio
+                  │   └── Timeline mock
+                  └── Volver al dashboard
 ```
 
 La apertura directa de la aplicación muestra onboarding. La entrada al
@@ -60,23 +66,34 @@ workspace demo** hasta que haya un selector de origen funcional.
 - Si no hay proyectos, explicar cómo añadirlos a la raíz disponible; si hay
   error de lectura, ofrecer reintento y no sustituirlo por datos ficticios.
 
-### IDE clásico
+### Resumen de proyecto
 
-- Seleccionar carpeta actualiza el listado del directorio.
-- Seleccionar archivo muestra su ruta y contenido real solo cuando la API
-  permita leerlo.
-- Si aún no se lee contenido, mostrar un estado vacío explícito; no rellenar el
-  editor con texto inventado que parezca fuente real.
-- El control de edición puede mostrarse como parte de la maqueta, deshabilitado
-  o marcado **Simulado: no guarda cambios**.
-- El breadcrumb y una acción visible permiten volver al dashboard.
+- El detalle comunica identidad, datos locales e inferencias/mock.
+- **Editar proyecto** abre el Studio del mismo proyecto, no cambia a otra vista
+  del dashboard.
+- El retorno del Studio vuelve primero al resumen.
 
-### Vistas de proyecto
+### Studio / IDE
 
-- El selector distingue **IDE clásico** (activo) de **En construcción**.
-- Cambiar perspectiva mantiene el proyecto enfocado.
-- La pantalla en construcción debe conservar nombre de proyecto y navegación de
-  retorno, y explicar qué perspectiva se está prototipando.
+- El explorador muestra el árbol local real; seleccionar un archivo carga su
+  contenido real en el editor de solo lectura.
+- La terminal no ejecuta comandos y el chat no se conecta a un asistente;
+  ambos deben identificarse como mock.
+- Al enviar un mensaje, el chat muestra estado de espera y devuelve
+  **“No disponible en esta demo”** tras 10 segundos.
+- El breadcrumb y una acción visible permiten volver al resumen del proyecto.
+- Dentro del Studio, compactar el sidebar en un rail lateral y mostrar una barra
+  superior compartida. El selector de tres posiciones cambia IDE/Multipista y
+  conserva una tercera opción bloqueada.
+
+### Studio / Multipista
+
+- Mostrar dos paneles superiores: preview y directorio/recursos; debajo, un
+  timeline ancho con cabecera de tiempo/columnas y filas bento diferenciadas por
+  color.
+- Todo el contenido es un skeleton mock sin reproducción ni edición de medios.
+- Ocultar las barras de scroll del viewport del editor/timeline sin deshabilitar
+  el scroll de touchpad o gestos táctiles.
 
 ## Banners de contexto
 
