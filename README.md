@@ -7,6 +7,21 @@ and per-project detail views including an IDE and a multitrack skeleton.
 Onboarding and editing controls are clearly marked as simulated; project
 contents continue to come from the local filesystem.
 
+## Capturas
+
+Microcanvas de código y taxonomía para explorar módulos, vistas y relaciones:
+
+![Grafo de código y taxonomía semántica en la vista Multipista](docs/Capturas/Captura%20de%20pantalla%202026-10-10%20083602.png)
+
+Guía visual de marca y modelo de datos con entidades, registros de muestra y
+relaciones:
+
+![Guía de estilos y modelo de datos de Mini Store](docs/Capturas/Captura%20de%20pantalla%202026-10-10%20082728.png)
+
+Inspector Layers y panel de métricas y parámetros de configuración:
+
+![Inspector de páginas y entidades con métricas y parámetros](docs/Capturas/Captura%20de%20pantalla%202026-10-10%20082908.png)
+
 Product structure and UX contracts:
 
 - [Information architecture](./docs/product/arquitectura-de-informacion.md)

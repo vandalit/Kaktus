@@ -77,20 +77,20 @@ const entitiesByProject: Record<string, DataEntity[]> = {
   ],
   "02-forma-studio": [
     {
-      name: "portfolioProjects",
-      role: "JS SEED · PROYECTOS",
-      fields: ["id", "title", "category", "year", "description"],
-      keys: ["id lógico"],
+      name: "project-card",
+      role: "HTML DATA-* · CASOS",
+      fields: ["data-project", "data-description"],
+      keys: ["data-project"],
       rows: [
         {
-          label: "casa-nube · Casa Nube",
-          summary: "Hospitalidad · 2025",
-          data: { id: "casa-nube", title: "Casa Nube", category: "Hospitalidad", year: 2025, description: "Un refugio de montaña que necesitaba sentirse tan cálido en pantalla como en persona. Identidad, dirección de arte y experiencia web." }
+          label: "Casa Nube",
+          summary: "data-project · tarjeta 01",
+          data: { "data-project": "Casa Nube", "data-description": "Un refugio de montaña que necesitaba sentirse tan cálido en pantalla como en persona. Identidad, dirección de arte y experiencia web." }
         },
         {
-          label: "marea · Marea",
-          summary: "Cuidado personal · 2024",
-          data: { id: "marea", title: "Marea", category: "Cuidado personal", year: 2024, description: "Una identidad fluida para una marca de cuidado personal que encuentra inspiración en el ritmo del océano. Estrategia, identidad y packaging." }
+          label: "Marea",
+          summary: "data-project · tarjeta 02",
+          data: { "data-project": "Marea", "data-description": "Una identidad fluida para una marca de cuidado personal que encuentra inspiración en el ritmo del océano. Estrategia, identidad y packaging." }
         }
       ]
     }
@@ -130,7 +130,7 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
   const isPulseBoard = projectId === "03-pulse-board";
   const entities = entitiesByProject[projectId] ?? [];
   const title = isMiniStore ? "MODELO RELACIONAL" : isPulseBoard ? "MODELO LOCAL · TASK" : "MODELO DE CONTENIDO";
-  const projectName = isMiniStore ? "01-MINI-STORE / SQLITE" : isPulseBoard ? "03-PULSE-BOARD / NAVEGADOR" : "02-FORMA-STUDIO / JS SEED";
+  const projectName = isMiniStore ? "01-MINI-STORE / SQLITE" : isPulseBoard ? "03-PULSE-BOARD / NAVEGADOR" : "02-FORMA-STUDIO / HTML DATA-*";
 
   return (
     <section className={`database-canvas${isPulseBoard ? " is-pulse" : ""}${!isMiniStore && !isPulseBoard ? " is-static" : ""}`} aria-label="Canvas de datos del proyecto">
@@ -238,7 +238,7 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
               ? "Muestra manual alineada al seeder; no es consulta runtime."
               : isPulseBoard
                 ? "JSON inicial del tablero · no es una tabla SQL."
-                : "Proyectos estáticos en JS · no es una tabla SQL."}
+                : "Tarjetas escritas en HTML · no es una tabla SQL ni un seeder JS."}
           </p>
           {detailEntity && (
             <div className="database-data-detail" role="dialog" aria-modal="false" aria-label={`Contenido de ${detailEntity}`}>
@@ -261,7 +261,7 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
           ? <><span>#ecommerce</span><span>#pedido</span><span>#inventario</span><span>#transacción</span></>
           : isPulseBoard
             ? <><span>#kanban</span><span>#tareas</span><span>#json</span><span>#localstorage</span></>
-            : <><span>#portfolio</span><span>#contenido</span><span>#estático</span></>}
+            : <><span>#portfolio</span><span>#html-data</span><span>#estático</span></>}
       </footer>
     </section>
   );

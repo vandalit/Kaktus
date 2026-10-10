@@ -5,6 +5,7 @@ import CodeAnatomyCanvas from "./CodeAnatomyCanvas";
 import DatabaseCanvas from "./DatabaseCanvas";
 import DesignSystemCanvas from "./DesignSystemCanvas";
 import LayersCanvas from "./LayersCanvas";
+import ParametersCanvas from "./ParametersCanvas";
 import SiteTaxonomyCanvas from "./SiteTaxonomyCanvas";
 
 const tracks = [
@@ -386,6 +387,8 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                                   ? "ESTILO · BRAND KIT"
                                   : track.color === "amber"
                                     ? "LAYERS · VISTAS Y ENTIDADES"
+                                    : track.color === "rose"
+                                      ? "MÉTRICAS · PARÁMETROS"
                                 : `CANAL ${String(trackIndex + 1).padStart(2, "0")} · CANVAS`}
                             <span>CONTRAER −</span>
                           </span>
@@ -396,7 +399,8 @@ function TimelinePanel({ projectId, glassTheme, onToggleGlass }: TimelinePanelPr
                       {isExpanded && track.color === "cyan" && <SiteTaxonomyCanvas projectId={projectId} />}
                       {isExpanded && track.color === "coral" && <DesignSystemCanvas projectId={projectId} key={projectId} />}
                       {isExpanded && track.color === "amber" && <LayersCanvas projectId={projectId} key={projectId} />}
-                      {isExpanded && !["violet", "lime", "cyan", "coral", "amber"].includes(track.color) && (
+                      {isExpanded && track.color === "rose" && <ParametersCanvas projectId={projectId} />}
+                      {isExpanded && !["violet", "lime", "cyan", "coral", "amber", "rose"].includes(track.color) && (
                         <div className="multitrack-clip__placeholder">
                           <span>CANVAS DE ANATOMÍA</span>
                           <strong>Widget de canal en preparación</strong>
