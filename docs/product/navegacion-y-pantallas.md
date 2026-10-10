@@ -1,8 +1,7 @@
 # Navegación y pantallas
 
-**Estado:** propuesta funcional para prototipar y contrastar con Figma.  
-**Meta:** definir destinos, estado navegable y límites entre contextos antes de
-escoger o implementar un router.
+**Estado:** contrato de navegación implementado con History API nativo.
+**Meta:** conservar destinos y límites de contexto al integrar persistencia.
 
 ## Modelo de navegación
 
@@ -49,25 +48,32 @@ IDs de vista estables y distintos por contexto:
   muestra bloqueada como **En construcción** hasta definir su alcance.
 
 Los rótulos `En construcción` pueden repetirse; IDs y componentes internos no.
-El ID de proyecto debe derivarse del origen y la ruta relativa, no del título
-extraído de su README.
+El ID de proyecto será opaco y persistente; no depende del título ni del orden.
+La clave natural inicial es origen + ruta relativa. Si cambia la ruta, se trata
+como una nueva identidad hasta que exista detección de movimientos segura.
 
 ## Estado en URL y estado efímero
 
-La URL debe ser fuente de verdad para el nivel de navegación, el workspace, el
+La URL es fuente de verdad para el nivel de navegación, el workspace, el
 proyecto activo y la vista activa. Esto permite recargar, compartir y usar atrás/
 adelante del navegador de forma predecible.
 
-Estado inicialmente efímero (no requiere segmento de ruta):
+SQLite podrá guardar defaults para futuras entradas, pero no reemplazará una URL
+explícita. Estado efímero en el MVP (sin segmento de ruta ni persistencia):
 
 - texto de búsqueda;
 - orden, filtros y paneles expandidos;
 - proyecto seleccionado en una lista si no se ha abierto su detalle;
-- archivo seleccionado en el editor, salvo decisión posterior de incluirlo en
-  query string para enlaces profundos.
+- archivo seleccionado en el editor durante la sesión; si se recuerda entre
+  sesiones, se guarda como preferencia por proyecto y se valida al restaurar,
+  sin incluirlo en la URL en esta etapa.
 
-Evitar mantener una copia de estado de ruta en React separada de la URL. Si se
-adopta router, el estado deberá derivarse de sus parámetros.
+SQLite guarda defaults de dashboard/Studio y, opcionalmente, la última vista y
+archivo usado por proyecto. Una preferencia solo se aplica al entrar por un
+destino sin vista explícita; una URL explícita y el historial del navegador
+prevalecen. La vista bloqueada no es un valor persistible.
+
+Evitar mantener una copia de estado de ruta en React separada de la URL.
 
 ## Reglas de transición
 
@@ -171,11 +177,7 @@ pantalla/componentes, no como rutas nuevas salvo que haya razón de producto.
 
 ## Decisión de router
 
-**Propuesta:** en la fase de maqueta, modelar estas rutas mediante un catálogo
-tipado de rutas/vistas y el History API nativo, sin agregar dependencia. Añadir
-una librería de routing solo si el prototipo exige rutas anidadas complejas,
-guards, layouts anidados o sincronización que el equipo no quiera mantener.
-
-Esta recomendación es provisional. La ruta, los IDs y la expectativa de
-historial sí son decisiones de producto; la librería es una decisión técnica
-posterior.
+El prototipo usa History API nativo. Mantenerlo para el siguiente incremento;
+reconsiderar una librería solo si aparecen rutas anidadas complejas o
+sincronización costosa. SQLite no cambia el contrato de rutas. Ver la
+[hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).

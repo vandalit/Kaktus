@@ -1,191 +1,251 @@
-# Propuesta de modelo de datos
+# Modelo de datos y persistencia local
 
-**Estado:** modelo lógico propuesto; no hay base de datos de Kaktus implementada.
-  
-El filesystem local continúa siendo la fuente de verdad. Este modelo describe
-qué metadata tendría sentido persistir para recordar workspaces y acelerar
-lecturas, sin guardar una copia del código fuente.
+**Estado:** dirección acordada; esquema listo para revisión técnica. SQLite y
+las nuevas rutas de persistencia todavía no están implementadas.
 
-## Recomendación de persistencia
+## Decisiones de arquitectura
 
-Evaluar SQLite cuando el producto requiera recordar workspaces, historial de
-escaneos o preferencias entre sesiones. No añadir la base durante el maquetado.
-La primera versión de navegación puede operar con respuestas de la API y estado
-de URL.
+1. SQLite será la persistencia local de workspaces, orígenes, identidades,
+   observaciones del filesystem y preferencias de interfaz.
+2. El filesystem continúa siendo la fuente de verdad para archivos, carpetas y
+   contenido. La base es un índice reconstruible, no un respaldo del código.
+3. Se persisten metadatos y resultados de análisis; nunca el contenido fuente,
+   secretos de Git, tokens ni credenciales.
+4. Las rutas activas y el contexto navegable viven en la URL. Los catálogos de
+   vistas son constantes versionadas en el frontend/backend, no filas editables
+   en tablas.
+5. El diseño soporta más de un workspace y origen, aunque la primera puesta en
+   marcha solo registre el workspace local de demostración `CaseUses/`.
+6. Git/remoto, edición de archivos, terminal y chat quedan fuera del backend
+   inicial. No se crearán registros que representen conexiones simuladas como
+   conexiones reales.
 
-Reglas:
+## Límites entre fuente, índice y presentación
 
-- No persistir contenido de archivos como parte del índice.
-- No persistir tokens/credenciales de proveedores en estas tablas.
-- La base es un índice/caché local descartable y reconstruible; filesystem es
-  autoridad sobre archivos y rutas.
-- Los resultados inferidos registran método/confianza o se etiquetan claramente.
-- Todas las rutas son relativas al origen dentro del índice; el path absoluto se
-  limita al registro del origen local.
+| Dato | Fuente de verdad | Persistencia propuesta |
+|---|---|---|
+| Contenido de un archivo | Archivo real | No persistir; leer bajo demanda |
+| Ruta, tipo y tamaño de entrada | Filesystem | Snapshot de escaneo, reconstruible |
+| Conteos de archivos/carpetas | Escaneo del filesystem | Snapshot de escaneo |
+| Nombre/descr. observada del proyecto | Filesystem y reglas existentes | Metadata del snapshot |
+| Stack y tipo detectados | Reglas de inferencia | Snapshot con fuente y versión de detector |
+| Identidad de workspace/origen/proyecto | Kaktus + ubicación local | SQLite |
+| Preferencia de vista inicial | Usuario local | SQLite |
+| Ruta/vista actualmente abierta | URL | No duplicar como estado persistente |
+| Búsqueda, flip de tarjeta, fila expandida | Interfaz | Estado efímero; no persistir en MVP |
+| Valores de salud, conexiones, terminal/chat mock | Ninguna fuente real | No persistir |
 
-## Diagrama lógico
+## Modelo relacional
 
 ```text
-workspaces 1 ─── N roots 1 ─── N projects 1 ─── N scans
-                                             ├── N project_technologies
-                                             └── N filesystem_entries (por scan)
-workspaces 1 ─── 1 workspace_preferences
+workspaces 1 ─── N roots 1 ─── N projects 1 ─── N project_scans
+       │                                      ├── N project_technologies
+       │                                      └── N filesystem_entries
+       └── 1 workspace_preferences
+projects 1 ─── 0..1 project_preferences
 ```
 
-`dashboard_views` y `project_views` son catálogos de producto mantenidos en
-código, no filas configurables en la base. El estado de ruta también vive en la
-URL, no en una tabla.
+`project_scans` registra observaciones temporales. Un escaneo fallido no
+reemplaza ni invalida el último snapshot completo. No habrá tabla para cada
+vista: dashboard y Studio presentan las mismas entidades con distintos
+componentes.
 
-## Tablas propuestas
+## Tablas
+
+Tipos SQL expresados para SQLite. Fechas en UTC ISO-8601; claves UUID como
+`TEXT`. Activar `PRAGMA foreign_keys = ON` en cada conexión.
 
 ### `workspaces`
 
-Representa un contexto de trabajo visible.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
-| `id` | TEXT/UUID | PK |
+| `id` | TEXT | PK |
 | `name` | TEXT | NOT NULL |
-| `created_at` | TEXT/ISO-8601 | NOT NULL |
-| `updated_at` | TEXT/ISO-8601 | NOT NULL |
+| `created_at` | TEXT | NOT NULL |
+| `updated_at` | TEXT | NOT NULL |
+
+Workspace lógico; no contiene proyectos duplicados por vista.
 
 ### `roots`
 
-Origen asociado al workspace. `kind` distingue carpeta local de repositorio.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
-| `id` | TEXT/UUID | PK |
-| `workspace_id` | TEXT/UUID | FK → `workspaces.id`, NOT NULL |
-| `kind` | TEXT | `local` o `git` |
+| `id` | TEXT | PK |
+| `workspace_id` | TEXT | FK → `workspaces.id`, NOT NULL |
+| `kind` | TEXT | `local` o `git`; CHECK |
 | `display_name` | TEXT | NOT NULL |
-| `local_path` | TEXT | Nullable; solo origen local |
-| `remote_url` | TEXT | Nullable; URL sin credenciales embebidas |
-| `created_at` | TEXT/ISO-8601 | NOT NULL |
-| `last_opened_at` | TEXT/ISO-8601 | Nullable |
+| `local_path` | TEXT | Nullable, ruta absoluta canonicalizada solo para `local` |
+| `remote_url` | TEXT | Nullable, sin credenciales; reservado para soporte Git |
+| `created_at` | TEXT | NOT NULL |
+| `last_opened_at` | TEXT | Nullable |
 
-Restricción: `kind=local` requiere `local_path`; `kind=git` requiere `remote_url`.
-Para el prototipo, `CaseUses/` es una configuración demo y no requiere que la
-selección mock se escriba en esta tabla.
+CHECK exige `local_path` para `kind=local` y `remote_url` para `kind=git`.
+El primer release crea solo el origen local de demo. No acepta una ruta arbitraria
+desde el cliente; la selección real de carpetas requiere una decisión y un
+contrato de permisos propios.
 
 ### `projects`
 
-Identidad navegable por origen. Su `relative_path` se normaliza con `/` y es
-única dentro del origen.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
-| `id` | TEXT/UUID o clave estable | PK |
-| `root_id` | TEXT/UUID | FK → `roots.id`, NOT NULL |
-| `relative_path` | TEXT | NOT NULL |
+| `id` | TEXT | PK UUID persistente |
+| `root_id` | TEXT | FK → `roots.id`, NOT NULL |
+| `relative_path` | TEXT | NOT NULL, separador `/`, única por origen |
 | `name` | TEXT | NOT NULL |
-| `description` | TEXT | Nullable; resumen observado |
-| `detected_type` | TEXT | Nullable; clasificador inferido |
-| `first_seen_at` | TEXT/ISO-8601 | NOT NULL |
-| `last_seen_at` | TEXT/ISO-8601 | NOT NULL |
-| `is_present` | INTEGER/BOOLEAN | NOT NULL, default true |
+| `first_seen_at` | TEXT | NOT NULL |
+| `last_seen_at` | TEXT | NOT NULL |
+| `is_present` | INTEGER | NOT NULL, booleano CHECK 0/1 |
 
-Restricción única: (`root_id`, `relative_path`). `id` no debe depender de
-posición, título del README ni orden de listado.
+`id` no se deriva del nombre/título ni del orden. La restricción inicial es
+`UNIQUE(root_id, relative_path)`: mover un proyecto se trata como desaparición
+y alta de otra identidad hasta que exista detección segura de movimientos.
+Solo un escaneo completo permite marcar proyectos ausentes. La API actual usa
+el nombre de carpeta en algunas rutas; el adaptador inicial conservará ese
+identificador como alias resoluble para no romper enlaces durante la migración
+a UUID.
 
 ### `project_scans`
 
-Registro de intentos de analizar un proyecto para estados y métricas auditables.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
-| `id` | TEXT/UUID | PK |
-| `project_id` | TEXT/UUID | FK → `projects.id`, NOT NULL |
-| `started_at` | TEXT/ISO-8601 | NOT NULL |
-| `completed_at` | TEXT/ISO-8601 | Nullable |
-| `status` | TEXT | `running`, `complete` o `error` |
-| `files_count` | INTEGER | Nullable hasta completar |
-| `folders_count` | INTEGER | Nullable hasta completar |
-| `error_message` | TEXT | Nullable; no almacenar secretos |
+| `id` | TEXT | PK UUID |
+| `project_id` | TEXT | FK → `projects.id`, NOT NULL |
+| `started_at` | TEXT | NOT NULL |
+| `completed_at` | TEXT | Nullable |
+| `status` | TEXT | `running`, `complete` o `error`; CHECK |
+| `files_count` | INTEGER | Nullable hasta finalizar |
+| `folders_count` | INTEGER | Nullable hasta finalizar |
+| `description` | TEXT | Nullable, resumen observado |
+| `detected_type` | TEXT | Nullable, clasificación inferida |
+| `detector_version` | TEXT | Nullable, versión de reglas |
+| `error_message` | TEXT | Nullable, sanitizado; no guardar secretos |
+
+Índice sugerido: `(project_id, completed_at DESC)`. Las vistas usan el snapshot
+completo más reciente; si el escaneo más reciente falla, el anterior completo
+continúa disponible, con el error del intento mostrado separadamente.
 
 ### `project_technologies`
 
-Heurísticas detectadas en un escaneo, separadas para poder etiquetarlas como
-inferencias.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
 | `id` | INTEGER | PK |
-| `scan_id` | TEXT/UUID | FK → `project_scans.id`, NOT NULL |
+| `scan_id` | TEXT | FK → `project_scans.id`, NOT NULL |
 | `name` | TEXT | NOT NULL |
-| `source` | TEXT | Señal: extensión, manifiesto o regla |
-| `confidence` | REAL | Nullable, rango 0–1 |
+| `source` | TEXT | NOT NULL; archivo/regla que originó la detección |
+| `confidence` | REAL | Nullable, CHECK entre 0 y 1 |
 
-Restricción única sugerida: (`scan_id`, `name`, `source`).
+`UNIQUE(scan_id, name, source)`. Son inferencias, no dependencias instaladas
+garantizadas.
 
 ### `filesystem_entries`
 
-Índice de árbol de un escaneo. No contiene bytes ni contenido de archivo.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
 | `id` | INTEGER | PK |
-| `scan_id` | TEXT/UUID | FK → `project_scans.id`, NOT NULL |
-| `parent_id` | INTEGER | FK → `filesystem_entries.id`, Nullable para raíz |
+| `scan_id` | TEXT | FK → `project_scans.id`, NOT NULL |
+| `parent_path` | TEXT | Nullable para raíz lógica; ruta relativa |
 | `relative_path` | TEXT | NOT NULL |
 | `name` | TEXT | NOT NULL |
-| `kind` | TEXT | `directory` o `file` |
+| `kind` | TEXT | `directory` o `file`; CHECK |
 | `extension` | TEXT | Nullable |
 | `size_bytes` | INTEGER | Nullable |
-| `modified_at` | TEXT/ISO-8601 | Nullable |
+| `modified_at` | TEXT | Nullable |
 
-Restricción única: (`scan_id`, `relative_path`). No indexar enlaces simbólicos
-ni seguir rutas que salgan del origen. La lectura de archivo se realiza bajo
-demanda mediante API local y con validación de ruta, no desde contenido
-persistido en esta tabla.
+`UNIQUE(scan_id, relative_path)` e índice `(scan_id, parent_path)`. Excluir
+symlinks, rutas ignoradas y entradas fuera de la raíz. No indexar contenido,
+hashes ni secretos en el primer release. La lectura del archivo sigue siendo una
+operación bajo demanda y vuelve a validar existencia, tipo, tamaño y ruta.
 
-### `workspace_preferences` (opcional)
+### `workspace_preferences`
 
-Preferencias locales duraderas, no estado de navegación esencial.
-
-| Columna | Tipo lógico | Reglas |
+| Columna | Tipo | Reglas |
 |---|---|---|
-| `workspace_id` | TEXT/UUID | PK y FK → `workspaces.id` |
-| `preferred_dashboard_view` | TEXT | Nullable; ID de catálogo conocido |
-| `preferred_project_view` | TEXT | Nullable; ID de catálogo conocido |
-| `updated_at` | TEXT/ISO-8601 | NOT NULL |
+| `workspace_id` | TEXT | PK y FK → `workspaces.id` |
+| `preferred_dashboard_view` | TEXT | `projects` o `console`; CHECK |
+| `dashboard_sort` | TEXT | Nullable, `source_order` o `reverse_source_order`; CHECK |
+| `preferred_studio_view` | TEXT | `ide` o `multipista`; CHECK |
+| `updated_at` | TEXT | NOT NULL |
 
-Para el MVP, las preferencias podrían no existir: la URL conserva la vista
-activa y los defaults permanecen en el código.
+Guarda defaults para próximas entradas, no sustituye el selector activo en la
+URL. El orden inicial del producto es el fallback del código.
 
-## Cardinalidades y claves
+### `project_preferences`
 
-- Un workspace tiene uno o más orígenes.
-- Un origen contiene cero o más proyectos detectados.
-- Un proyecto tiene muchos escaneos en el tiempo.
-- Un escaneo tiene cero o más tecnologías y entradas de filesystem.
-- Cada entidad tiene identidad estable; las tablas de escaneo describen una
-  observación temporal, no otra identidad de proyecto.
-- Al desaparecer una carpeta, marcar `is_present=false` tras un escaneo completo
-  satisfactorio; no borrar el proyecto ante un escaneo fallido.
+| Columna | Tipo | Reglas |
+|---|---|---|
+| `project_id` | TEXT | PK y FK → `projects.id` |
+| `preferred_studio_view` | TEXT | Nullable, `ide` o `multipista`; CHECK |
+| `selected_file_path` | TEXT | Nullable, relativa y validada contra el árbol |
+| `updated_at` | TEXT | NOT NULL |
 
-## Elementos que no son tablas
+Preferencias para reabrir un proyecto. Al cargar, validar que vista y archivo
+sigan existiendo; si no, usar el default vigente y no fallar la pantalla. No
+guardar paneles, mensajes mock ni contenido del editor.
 
-- Contenido fuente: permanece en el filesystem.
-- Estado de navegación (workspace, proyecto, vista): URL.
-- Búsqueda, filtros y paneles abiertos: estado de UI; persistencia futura opcional.
-- Catálogo de vistas: constantes/versionado de aplicación.
-- Datos mock del onboarding: no persistir como una selección real.
-- Credenciales de Git: fuera del modelo; resolver de forma segura solo cuando se
-  diseñe conexión real.
+### `schema_migrations`
 
-## Decisiones para revisar antes de implementar persistencia
+| Columna | Tipo | Reglas |
+|---|---|---|
+| `version` | INTEGER | PK |
+| `applied_at` | TEXT | NOT NULL |
 
-1. ¿Kaktus debe recordar varios workspaces entre sesiones o basta con un
-   workspace activo?
-2. ¿Hace falta historial de escaneos o solo reemplazar el último índice?
-3. ¿Se necesita indexar todos los archivos o leer el árbol bajo demanda?
-4. ¿Debe persistirse la vista preferida o solo representarse en la URL? Si se
-   persiste, ¿la preferencia del Studio es global al workspace o por proyecto?
-5. ¿Qué datos se consideran privados y cómo se elimina un origen de forma
-   completa?
-6. ¿Cómo se conserva la identidad de un proyecto al renombrar/mover su carpeta,
-   eliminarla y volver a crearla en la misma ruta, o reemplazar el origen?
+La creación/evolución del esquema usa migraciones SQL versionadas y transaccionales.
+No modificar a mano una base ya creada ni borrar datos para aplicar un cambio.
 
-Hasta responderlas, conservar el esquema como propuesta y no crear migraciones
-ni archivos de base de datos.
+## Ubicación, acceso y ciclo de vida
+
+- Guardar el archivo DB fuera del repositorio, en el directorio de datos de
+  usuario de la plataforma; permitir override con `KAKTUS_DATA_DIR`.
+- Crear directorio con permisos privados cuando la plataforma lo permita. No
+  incluir base de datos en Git, builds frontend ni logs.
+- Una sola instancia local del backend abre la DB. Activar claves foráneas y
+  timeout de espera de escritura; las actualizaciones de snapshot se hacen en
+  transacción.
+- La primera inicialización registra workspace/origen demo y genera un primer
+  escaneo completo. El usuario puede pedir reescaneo; no se hace crawling
+  recursivo en cada petición de lista.
+- Ante error de escaneo, conservar el snapshot correcto más reciente y devolver
+  el estado de error claramente. No marcar proyectos ausentes con un escaneo
+  incompleto.
+- Las operaciones SQLite solo guardan configuración y metadatos. Leer/escribir
+  archivos de proyecto no forma parte de este backend inicial; las rutas de
+  lectura actuales siguen siendo de solo lectura.
+
+## Catálogos y preferencias: contrato por vista
+
+| Contexto | ID en código/ruta | Preferencia persistida | Estado efímero |
+|---|---|---|---|
+| Dashboard | `projects`, `console` | Modo por defecto y orden disponible | Búsqueda, filtros aún no definidos, fila expandida |
+| Resumen de proyecto | Ruta del proyecto | Ninguna vista adicional | Scroll/retorno |
+| Studio | `ide`, `multipista` | Default del workspace y override por proyecto | Ruta activa, paneles abiertos |
+| Editor IDE | Ruta relativa del archivo | Último archivo seleccionado opcional por proyecto | Contenido abierto en memoria |
+| Onboarding | Demo/local/remoto | No persistir conexión mock | Modal y estado de la demo |
+
+La tercera opción bloqueada no se guarda como preferencia válida. Validar cada
+ID contra el catálogo al escribir y al leer.
+
+## Alcance del primer release de persistencia
+
+Incluye esquema y migraciones, registro del workspace demo, escaneo inicial,
+snapshot de proyecto/árbol/tecnologías, endpoints de consulta y actualización de
+preferencias reales. Mantiene filesystem como origen de contenido.
+
+No incluye selector de carpeta real, conexión GitHub, cuentas/perfiles,
+sincronización remota, edición de archivos, historial de chat, telemetría ni
+métricas simuladas. No requiere tablas configurables de vistas.
+
+## Decisiones técnicas a validar antes de escribir código
+
+1. **Runtime SQLite:** el entorno documentado es Node 20.20. `node:sqlite` no
+   está disponible en ese runtime; propuesta: mantener Node 20 y usar
+   `better-sqlite3` sin ORM para la API local de baja concurrencia. Alternativa:
+   elevar el mínimo de Node a una versión con `node:sqlite` estable.
+2. **Soporte de sistemas operativos:** confirmar plataformas de distribución
+   para resolver el directorio de datos y probar la dependencia nativa.
+3. **Retención de escaneos:** mantener snapshots previos en MVP para preservar
+   el último correcto; definir más adelante política de limpieza/cantidad.
+4. **Preferencias de proyecto:** confirmar si recordar archivo activo es útil;
+   es nullable y se puede omitir del primer endpoint sin alterar el modelo.
+
+Los demás límites para el primer incremento están fijados en la
+[hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).

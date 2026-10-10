@@ -331,134 +331,43 @@ La tienda demo tiene dependencias separadas; sus instrucciones están en
 - `git status` estaba limpio al iniciar esta bitácora. Los cambios previos
   están en commits locales, aún no publicados a un remoto.
 
-## Hoja de ruta: próxima sesión de trabajo
+## Estado de producto y hoja de ruta
 
-Trabajar un objetivo por vez. No saltar directamente a construir el IDE ni añadir
-dependencias antes de cerrar el modelo de navegación y la composición visual.
+La jerarquía de pantallas y los límites entre dashboard, resumen de proyecto y
+Studio están definidos y maquetados. La siguiente etapa implementará SQLite y
+un backend local básico; no empezará todavía la selección real de carpetas,
+Git remoto ni la escritura de archivos.
 
-### 1. Alinear el contrato de producto y navegación
+La [hoja de ruta SQLite y backend](./docs/roadmap/sqlite-y-backend.md) es la
+referencia activa y secuencia el trabajo en: cerrar driver/runtime y directorio
+de datos, añadir migraciones, guardar snapshots reconstruibles, exponer API y
+preferencias, conectar el frontend y validar persistencia/errores.
 
-- Confirmar la taxonomía anterior y dibujar el flujo
-  onboarding → dashboard → proyecto → vista del proyecto → regreso.
-- Definir qué estado identifica cada nivel y cómo se representa la vista activa.
-- Mantener separados el selector de vistas del dashboard y el del proyecto.
-- Acordar el comportamiento visible de **Continuar** y del regreso, incluso si
-  no existe un router o una selección de carpeta real.
+## Documentos vigentes
 
-**Resultado esperado:** mapa de pantallas/estados y reglas de transición antes de
-codificar las vistas.
+- [Arquitectura de información](./docs/product/arquitectura-de-informacion.md):
+  jerarquía y entidades.
+- [Experiencia UX](./docs/product/experiencia-ux.md): contrato de interacción.
+- [Navegación y pantallas](./docs/product/navegacion-y-pantallas.md): rutas y
+  transiciones implementadas.
+- [Lógica del producto](./docs/product/logica-del-producto.md): reglas de datos.
+- [Convenciones de frontend](./docs/product/convenciones-frontend.md): estilos y
+  componentes.
+- [Modelo de datos](./docs/data/modelo-de-datos.md): esquema y decisiones de
+  persistencia SQLite.
+- [Roadmap SQLite y backend](./docs/roadmap/sqlite-y-backend.md): etapas y
+  criterios de terminado.
 
-### 2. Definir la arquitectura de componentes frontend
+## Decisiones técnicas registradas
 
-- Revisar y descomponer el `App.tsx` actual en shell/layout, navegación,
-  componentes comunes y pantallas; evitar una única vista monolítica.
-- Identificar componentes compartidos (banner técnico, navegación/breadcrumbs,
-  selector de vistas, estados de carga/error/vacío) y componentes propios de
-  dashboard/IDE.
-- Definir props y datos mínimos que necesita cada vista, sin inventar un sistema
-  genérico prematuramente.
-
-**Resultado esperado:** inventario pequeño de componentes y límites claros entre
-estado de navegación, datos del workspace y presentación.
-
-### 3. Maquetar el onboarding
-
-- Diseñar la primera pantalla como canvas principal al cargar.
-- Mostrar opciones representativas para carpeta local y repositorio remoto, con
-  estilo wireframe de bloques planos en grises grafito.
-- Mantener detalles mínimos, jerarquía clara y un banner que indique que la
-  selección/conexión es mock.
-- Añadir **Continuar** hacia el workspace `CaseUses/`; no fingir que se ha
-  conectado un origen que todavía no se seleccionó realmente.
-
-**Resultado esperado:** onboarding entendible y transitable en modo demo, sin
-dependencias de servicios remotos.
-
-### 4. Ordenar el dashboard y sus modos
-
-- Conservar la vista de proyectos existente y los resúmenes que ya llegan de la
-  API local.
-- Diseñar el selector de vistas del dashboard como navegación entre
-  representaciones del conjunto de proyectos, no como navegación a detalle.
-- Distinguir en la UI las métricas/metadata leídas de `CaseUses/` de los
-  controles o visualizaciones aún simulados.
-- Hacer que seleccionar/abrir una tarjeta lleve a la vista del proyecto.
-
-**Resultado esperado:** dashboard consistente con el nuevo flujo y con una
-indicación inequívoca de qué información es real y qué comportamiento es mock.
-
-### 5. Maquetar el detalle IDE clásico
-
-- Crear el contexto de proyecto con breadcrumb y una forma visible de volver al
-  dashboard.
-- Componerlo con paneles de árbol/directorio, listado o selección de archivos y
-  área de detalle/editor de texto simple.
-- Usar información real de las carpetas. El árbol no debe inventar archivos;
-  cualquier endpoint necesario para leer el árbol o el contenido debe acordarse
-  y mantenerse local/de solo lectura.
-- Representar la edición de texto como affordance mock, indicando que los cambios
-  no se guardan ni modifican los archivos.
-- Mostrar banners horizontales que expliquen la fuente de datos, las decisiones
-  de la maqueta y las limitaciones actuales.
-
-**Resultado esperado:** vista IDE navegable en maqueta con estructura real y
-edición explícitamente simulada.
-
-### 6. Añadir una segunda vista de proyecto y revisar navegación
-
-- Añadir **En construcción** como segunda vista de proyecto.
-- Diseñar estados activos, inactivos y vacíos del selector; hacer evidente el
-  cambio de perspectiva y cómo regresar a IDE clásico.
-- Verificar que no se confunda con un modo del dashboard.
-
-**Resultado esperado:** sistema de vistas de proyecto extensible sin implementar
-todavía otras perspectivas.
-
-### 7. Revisión de coherencia y validación
-
-- Recorrer desde carga inicial hasta dashboard, detalle, cambio de vista y
-  regreso; incluir el botón de continuidad mock.
-- Comprobar jerarquía, nombres, banners de veracidad, responsive y estados de
-  carga/error/vacío.
-- Revisar componentes para evitar duplicación y confirmar que cada vista tiene
-  un propósito distinto.
-- Construir el frontend y corregir problemas introducidos por los cambios.
-
-**Resultado esperado:** cierre explícito de la sesión con una lista de decisiones
-resueltas y pendientes para el siguiente objetivo.
-
-## Decisiones técnicas: ahora y después
-
-- El frontend actual usa React 19, TypeScript, Vite y `lucide-react`; conservar
-  esta base para las maquetas.
-- No evaluar ni incorporar una librería de UI ahora: el lenguaje pedido
-  (wireframes planos en grises grafito) se puede resolver con componentes React
-  y CSS existentes.
-- Ya existe una propuesta de rutas y estados en
-  [navegación y pantallas](./docs/product/navegacion-y-pantallas.md). Validarla
-  primero con Figma; después decidir si basta History API o si hace falta una
-  librería de routing.
-- La selección de carpeta y conexión a repositorio son mock. El dashboard sigue
-  leyendo `CaseUses/` realmente.
-- El árbol IDE debe basarse en datos reales. La lectura de archivos, si aún no
-  está expuesta por la API local, se aborda como necesidad de integración
-  explícita; nunca simular contenido real ni habilitar escritura accidental.
-- El esquema relacional está propuesto en
-  [modelo de datos](./docs/data/modelo-de-datos.md). No implementar persistencia
-  hasta validar qué datos deben sobrevivir entre sesiones; hoy el filesystem
-  sigue siendo la fuente de verdad.
-
-## Documentos de definición del producto
-
-Estos documentos son propuestas para revisión, no especificaciones aprobadas ni
-funciones ya implementadas:
-
-- [Arquitectura de información](./docs/product/arquitectura-de-informacion.md)
-- [Experiencia UX](./docs/product/experiencia-ux.md)
-- [Navegación y pantallas](./docs/product/navegacion-y-pantallas.md)
-- [Lógica del producto](./docs/product/logica-del-producto.md)
-- [Modelo de datos](./docs/data/modelo-de-datos.md)
-
-Próximo paso de producto: contrastar los flujos y estados con los frames de
-Figma, registrar correcciones y aprobar la estructura antes de maquetar las
-vistas del frontend.
+- Mantener React 19, TypeScript, Vite, CSS existente y navegación History API
+  mientras cubran el alcance.
+- SQLite es local y almacena identidades, metadatos, snapshots y preferencias;
+  el filesystem conserva autoridad sobre archivos/contenido.
+- No almacenar contenido fuente, credenciales, eventos mock ni telemetría.
+- El runtime actual es Node 20.20. Se propone `better-sqlite3` sin ORM para el
+  backend local, sujeto a confirmar plataformas de distribución e instalación
+  nativa antes de cambiar dependencias.
+- La API actual ya lee summaries, árbol y archivos de `CaseUses/`; el trabajo
+  futuro sustituye summaries/árbol por snapshots indexados sin relajar las
+  validaciones de lectura de archivo.

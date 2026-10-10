@@ -1,11 +1,12 @@
 # Lógica del producto
 
-**Estado:** propuesta funcional para validar antes del maquetado estructural.
+**Estado:** reglas funcionales acordadas; persistencia SQLite aún pendiente.
 
 ## Reglas centrales
 
 1. El filesystem local es la fuente de verdad de proyectos, carpetas y archivos.
-2. Un workspace contiene un origen; un origen puede contener varios proyectos.
+2. Un workspace puede agrupar uno o más orígenes; cada origen contiene cero o
+   más proyectos. El workspace demo empieza con una raíz.
 3. Proyecto significa carpeta detectada, no tarjeta ni modo de presentación.
 4. Las vistas representan una misma entidad en contextos diferentes y no
    duplican el proyecto.
@@ -21,15 +22,14 @@
 
 ```text
 Filesystem (CaseUses/)
-    ↓ lectura local, solo lectura
-API local
-    ↓ resúmenes de proyectos
+    ↓ escaneo local, solo lectura
+Backend local ↔ SQLite (identidades, snapshots, preferencias)
+    ↓ summaries/tree desde el snapshot
 Dashboard
     ↓ identidad estable de proyecto
 Resumen del proyecto
     ↓ abrir Studio
-API local (árbol y lectura acotada de archivo)
-    ↓ estructura/contenido real
+Backend local (árbol indexado; archivo leído desde filesystem bajo demanda)
 Studio / IDE (solo lectura)
 ```
 
@@ -40,10 +40,11 @@ que aún no realizan esas acciones.
 
 ## Identidades y relaciones
 
-- Workspace: identidad local persistente cuando se decida guardar workspaces.
+- Workspace: identidad local persistente en SQLite.
 - Origen: un directorio local o una URL de repositorio; credenciales no se
   guardan en texto plano ni forman parte del prototipo.
-- Proyecto: clave estable derivada del origen + ruta relativa normalizada.
+- Proyecto: UUID persistente asociado al origen y ruta relativa normalizada;
+  mover de ruta cuenta inicialmente como una identidad nueva.
 - Entrada de filesystem: ruta relativa dentro de un proyecto.
 - Vista: ID de catálogo estable, determinado por su contexto y no por su nombre
   visible.
@@ -63,12 +64,17 @@ distintas. No usar el índice de una tarjeta como identidad.
 
 ### Dashboard
 
-1. Solicitar resumen de proyectos.
+1. Solicitar resúmenes del workspace al backend local; el backend sirve el
+   último snapshot completo de SQLite.
 2. Renderizar loading hasta respuesta; luego contenido, vacío o error.
 3. Calcular métricas agregadas solo con proyectos de la respuesta actual.
-4. Mantener búsqueda/orden como estado de presentación.
+4. Aplicar vista y orden por defecto desde preferencias persistidas; la URL
+   expresa el modo activo. Búsqueda, filtros temporales y fila expandida son
+   estado de presentación no persistente.
 5. Abrir un proyecto al solicitar explícitamente su detalle.
 6. Cambiar la vista del dashboard sin cambiar el conjunto de proyectos.
+7. Actualizar el índice solo por una acción explícita; un fallo conserva y
+   etiqueta el último snapshot correcto.
 
 ### Proyecto
 
@@ -77,13 +83,16 @@ distintas. No usar el índice de una tarjeta como identidad.
 3. Abrir primero el resumen del proyecto en `/workspaces/:workspaceId/projects/:projectId`.
 4. Entrar al Studio explícitamente desde **Editar proyecto**. La primera vista
    del Studio es `/studio/ide`.
-5. El selector superior cambia entre `ide` y `multipista`; una tercera vista
-   permanece bloqueada hasta definir su alcance.
-6. Leer el árbol local y solicitar contenido solo para el archivo seleccionado,
-   siempre dentro de la raíz permitida.
-7. No recorrer enlaces simbólicos ni permitir traversal fuera de la raíz.
-8. Mostrar error si la lectura real falla; no presentar placeholder como fuente.
-9. Regresar del Studio al resumen del mismo proyecto sin saltar el nivel.
+5. Aplicar preferencia por defecto de Studio del workspace, con override
+   opcional por proyecto; una vista explícita en URL prevalece y puede actualizar
+   el default futuro.
+6. El selector superior cambia entre `ide` y `multipista`; una tercera vista
+   permanece bloqueada y no puede guardarse como preferencia.
+7. Leer el árbol del snapshot y solicitar contenido solo para el archivo
+   seleccionado, siempre dentro de la raíz permitida.
+8. No recorrer enlaces simbólicos ni permitir traversal fuera de la raíz.
+9. Mostrar error si la lectura real falla; no presentar placeholder como fuente.
+10. Regresar del Studio al resumen del mismo proyecto sin saltar el nivel.
 
 ### Edición
 
@@ -115,9 +124,9 @@ El estado de navegación no debe residir en el componente de tarjeta o vista. La
 vistas reciben identidad/datos y emiten intención (abrir proyecto, cambiar modo,
 volver) al nivel de navegación.
 
-## Decisiones propuestas y pendientes
+## Decisiones de producto y pendientes
 
-### Propuestas para aprobar
+### Contrato acordado
 
 - Entrada inicial por onboarding y salida a `CaseUses/` mediante CTA demo.
 - Dashboard y Studio tienen ámbitos de vistas independientes; el resumen del
@@ -127,16 +136,23 @@ volver) al nivel de navegación.
   bloqueada hasta acordar su propósito.
 - Árbol y contenido del archivo seleccionado se leen de forma local y limitada;
   el editor permanece en solo lectura.
+- SQLite persiste workspaces/orígenes/proyectos, snapshots observados y
+  preferencias de vista; el filesystem sigue siendo autoridad de contenido.
+- Las preferencias proporcionan defaults de dashboard/Studio y no sustituyen
+  el estado actual representado por URL.
 - Terminal mock sin ejecución y chat de prueba con respuesta no disponible tras
   10 segundos; ninguna acción altera archivos.
 
-### Pendientes para validar con Figma
+### Pendientes técnicos antes del código
 
-- Nombre visible de cada vista secundaria.
-- Si el IDE debe añadir una vista intermedia de listado entre árbol y editor.
-- Qué banners son globales y cuáles contextuales.
-- Qué controles se muestran en la maqueta pero aparecen deshabilitados.
-- Si la selección de archivo debe formar parte de la URL.
+- Cerrar driver SQLite compatible con Node 20 y sistemas operativos objetivo.
+- Confirmar ubicación de datos de usuario por plataforma.
+- Decidir si el archivo seleccionado se recuerda desde el primer release; el
+  modelo lo permite pero puede omitirse inicialmente.
+- Definir política de retención de snapshots antiguos después del MVP.
+
+El orden y criterios de trabajo están en la
+[hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).
 
 ## Criterios de coherencia
 

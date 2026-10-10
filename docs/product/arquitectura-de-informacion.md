@@ -1,8 +1,9 @@
 # Arquitectura de información
 
-**Estado:** propuesta para validar con Figma  
-**Alcance:** estructura conceptual del producto; no representa funciones ya
-implementadas.
+**Estado:** jerarquía de producto acordada para la siguiente etapa de
+persistencia.
+**Alcance:** define conceptos y responsabilidades; SQLite aún no está
+implementada.
 
 ## Propósito del producto
 
@@ -19,7 +20,7 @@ identificarse como inferencia.
 | Origen / raíz | Ubicación local o remota que contiene proyectos | `CaseUses/` |
 | Proyecto | Unidad navegable identificada dentro de un origen | `01-mini-store/` |
 | Archivo o carpeta | Elemento del filesystem perteneciente a un proyecto | `frontend/src/App.tsx` |
-| Identidad | Referencia estable a una entidad, independiente de su título o posición | ID derivado de raíz + ruta relativa |
+| Identidad | Referencia estable a una entidad, independiente de su título o posición | UUID relacionado con origen + ruta relativa |
 | Dashboard | Contexto de resumen y comparación de los proyectos del workspace | Panel de proyectos |
 | Vista | Representación de un contexto, no una entidad diferente | Tarjetas, Studio IDE |
 | Studio | Espacio de trabajo de un proyecto, separado del dashboard y de su resumen | Studio del proyecto |
@@ -27,17 +28,18 @@ identificarse como inferencia.
 | Componente | Elemento de UI reutilizable y limitado a una responsabilidad | Banner de datos, selector de vistas |
 | Análisis | Observaciones calculadas a partir de los archivos | Stack inferido, conteos |
 
-No existe actualmente una base de datos persistente de Kaktus. El filesystem es
-la fuente de verdad; la API local lee metadatos y archivos permitidos bajo
-`CaseUses/`. El modelo de datos futuro se especifica en
-[modelo-de-datos.md](../data/modelo-de-datos.md).
+En el estado actual no existe una base persistente de Kaktus. La API lee el
+filesystem local. La siguiente etapa añadirá SQLite como índice reconstruible
+para metadata y preferencias, manteniendo los archivos como fuente de verdad;
+ver [modelo-de-datos.md](../data/modelo-de-datos.md) y la
+[hoja de ruta backend](../roadmap/sqlite-y-backend.md).
 
 ## Jerarquía principal
 
 ```text
 Kaktus
 └── Workspace
-    └── Origen / raíz
+    └── Origen / raíz (uno o más)
         └── Proyectos
             ├── Dashboard del workspace
             │   ├── Vista: Proyectos
@@ -127,5 +129,7 @@ solo usar un color o icono como señal.
 - La posición de una tarjeta, nombre visible o título inferido nunca es la
   identidad primaria.
 - Los contenidos de archivos no se duplican en una base de datos por defecto.
+- SQLite almacena identidad, snapshots de análisis y preferencias permitidas;
+  no es una base de contenido ni cambia la jerarquía de vistas.
 - La arquitectura visual puede evolucionar tras revisar los frames de Figma sin
   cambiar estas distinciones de dominio.

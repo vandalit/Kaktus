@@ -1,8 +1,7 @@
-# Propuesta de experiencia UX
+# Experiencia UX
 
-**Estado:** propuesta para validar con Figma  
-**Objetivo:** definir el contrato de experiencia antes de maquetar la estructura
-del frontend.
+**Estado:** contrato UX de las vistas maquetadas; la persistencia se incorporará
+sin alterar la jerarquía.
 
 ## Principios
 
@@ -61,10 +60,15 @@ workspace demo** hasta que haya un selector de origen funcional.
 ### Dashboard
 
 - Seleccionar un modo del dashboard actualiza la vista, no abre un proyecto.
+- El modo/orden preferido puede recordarse para la próxima entrada; al cambiar
+  vista desde una URL activa, la URL tiene prioridad y la preferencia se actualiza
+  para visitas futuras.
 - Seleccionar una tarjeta o su acción primaria abre el detalle de ese proyecto.
 - La búsqueda y el orden afectan solo a la colección visible.
 - Si no hay proyectos, explicar cómo añadirlos a la raíz disponible; si hay
   error de lectura, ofrecer reintento y no sustituirlo por datos ficticios.
+- Con SQLite, indicar cuándo se muestra el último snapshot correcto y cuándo el
+  escaneo más reciente falló; ofrecer actualización explícita sin vaciar la vista.
 
 ### Resumen de proyecto
 
@@ -84,6 +88,9 @@ workspace demo** hasta que haya un selector de origen funcional.
 - Al enviar un mensaje, el chat muestra estado de espera y devuelve
   **“No disponible en esta demo”** tras 10 segundos.
 - El breadcrumb y una acción visible permiten volver al resumen del proyecto.
+- Reabrir el Studio puede recuperar la vista/archivo preferido por proyecto;
+  validar que el archivo siga presente. Si no, abrir el IDE en estado inicial y
+  comunicar el estado real del filesystem sin bloquear el proyecto.
 - Dentro del Studio, compactar el sidebar en un rail lateral y mostrar una barra
   superior compartida. El selector de tres posiciones cambia IDE/Multipista y
   conserva una tercera opción bloqueada.
