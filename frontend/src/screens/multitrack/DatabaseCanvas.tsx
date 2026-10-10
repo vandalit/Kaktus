@@ -1,38 +1,121 @@
 import { useState } from "react";
-import { ArrowDown, Database, KeyRound, Link2, TableProperties } from "lucide-react";
+import { ArrowDown, Database, KeyRound, Link2, TableProperties, X } from "lucide-react";
 
 type DatabaseView = "map" | "tables";
+type DataValue = string | number | boolean | string[];
 
-const tables = [
-  {
-    name: "products",
-    role: "CATÁLOGO",
-    fields: ["id", "name", "description", "price_cents", "stock", "emoji"],
-    primaryKey: "id",
-    foreignKeys: []
-  },
-  {
-    name: "orders",
-    role: "PEDIDO",
-    fields: ["id", "customer_name", "total_cents", "created_at"],
-    primaryKey: "id",
-    foreignKeys: []
-  },
-  {
-    name: "order_items",
-    role: "PUENTE",
-    fields: ["order_id", "product_id", "product_name", "quantity", "unit_price_cents"],
-    primaryKey: "order_id + product_id",
-    foreignKeys: ["order_id → orders.id", "product_id → products.id"]
-  }
-];
+type SampleRow = {
+  label: string;
+  summary: string;
+  data: Record<string, DataValue>;
+};
+
+type DataEntity = {
+  name: string;
+  role: string;
+  fields: string[];
+  keys: string[];
+  rows: SampleRow[];
+};
 
 const productSeeds = [
-  { name: "TAZA", price: 1800, stock: 12 },
-  { name: "CUADERNO", price: 1250, stock: 18 },
-  { name: "BOLSO", price: 3200, stock: 7 },
-  { name: "LÁMPARA", price: 4550, stock: 5 }
+  { id: 1, name: "Taza de domingo", price: 1800, stock: 11, description: "Cerámica hecha para mañanas sin prisa.", emoji: "☕" },
+  { id: 2, name: "Cuaderno de ideas", price: 1250, stock: 17, description: "Papel grueso para planes grandes y pequeños.", emoji: "📓" },
+  { id: 3, name: "Bolso de paseo", price: 3200, stock: 6, description: "Lona resistente, bolsillo interior y cero complicaciones.", emoji: "👜" },
+  { id: 4, name: "Lámpara de mesa", price: 4550, stock: 4, description: "Luz cálida para leer un capítulo más.", emoji: "💡" }
 ];
+
+const entitiesByProject: Record<string, DataEntity[]> = {
+  "01-mini-store": [
+    {
+      name: "products",
+      role: "SQL · CATÁLOGO",
+      fields: ["id", "name", "description", "price_cents", "stock", "emoji"],
+      keys: ["PK id"],
+      rows: productSeeds.slice(0, 2).map((product) => ({
+        label: `#${product.id} ${product.name}`,
+        summary: `$${product.price.toLocaleString("es-CL")} · ${product.stock} u.`,
+        data: { ...product, price_cents: product.price }
+      }))
+    },
+    {
+      name: "orders",
+      role: "SQL · PEDIDOS",
+      fields: ["id", "customer_name", "total_cents", "created_at"],
+      keys: ["PK id"],
+      rows: [
+        {
+          label: "#1 Demo · Ana Soto",
+          summary: "$3.050 · 2 líneas",
+          data: { id: 1, customer_name: "Demo · Ana Soto", total_cents: 3050, created_at: "generado al iniciar" }
+        },
+        {
+          label: "#2 Demo · Leo Paz",
+          summary: "$7.750 · 2 líneas",
+          data: { id: 2, customer_name: "Demo · Leo Paz", total_cents: 7750, created_at: "generado al iniciar" }
+        }
+      ]
+    },
+    {
+      name: "order_items",
+      role: "SQL · DETALLE",
+      fields: ["order_id", "product_id", "product_name", "quantity", "unit_price_cents"],
+      keys: ["PK order_id + product_id", "FK order_id → orders.id", "FK product_id → products.id"],
+      rows: [
+        {
+          label: "Pedido 1 · Taza",
+          summary: "1 × $1.800",
+          data: { order_id: 1, product_id: 1, product_name: "Taza de domingo", quantity: 1, unit_price_cents: 1800 }
+        },
+        {
+          label: "Pedido 1 · Cuaderno",
+          summary: "1 × $1.250",
+          data: { order_id: 1, product_id: 2, product_name: "Cuaderno de ideas", quantity: 1, unit_price_cents: 1250 }
+        }
+      ]
+    }
+  ],
+  "02-forma-studio": [
+    {
+      name: "portfolioProjects",
+      role: "JS SEED · PROYECTOS",
+      fields: ["id", "title", "category", "year", "description"],
+      keys: ["id lógico"],
+      rows: [
+        {
+          label: "casa-nube · Casa Nube",
+          summary: "Hospitalidad · 2025",
+          data: { id: "casa-nube", title: "Casa Nube", category: "Hospitalidad", year: 2025, description: "Un refugio de montaña que necesitaba sentirse tan cálido en pantalla como en persona. Identidad, dirección de arte y experiencia web." }
+        },
+        {
+          label: "marea · Marea",
+          summary: "Cuidado personal · 2024",
+          data: { id: "marea", title: "Marea", category: "Cuidado personal", year: 2024, description: "Una identidad fluida para una marca de cuidado personal que encuentra inspiración en el ritmo del océano. Estrategia, identidad y packaging." }
+        }
+      ]
+    }
+  ],
+  "03-pulse-board": [
+    {
+      name: "tasks",
+      role: "LOCALSTORAGE · TASK[]",
+      fields: ["id", "title", "description", "status", "category", "priority", "due", "assignees", "mine"],
+      keys: ["id lógico", "status: todo | doing | done"],
+      rows: [
+        {
+          label: "t1 · Definir estructura de navegación",
+          summary: "done · research · normal",
+          data: { id: "t1", title: "Definir estructura de navegación", description: "Alinear las secciones y sus jerarquías antes de pasar a detalle.", status: "done", category: "research", priority: "normal", due: "09 oct", assignees: ["VP", "AM"], mine: true }
+        },
+        {
+          label: "t2 · Inventario de páginas actuales",
+          summary: "done · research · low",
+          data: { id: "t2", title: "Inventario de páginas actuales", description: "Listar vistas, estados vacíos y contenido que se debe conservar.", status: "done", category: "research", priority: "low", due: "10 oct", assignees: ["JC"], mine: false }
+        }
+      ]
+    }
+  ]
+};
 
 const formatPrice = new Intl.NumberFormat("es-CL", {
   style: "currency",
@@ -42,13 +125,15 @@ const formatPrice = new Intl.NumberFormat("es-CL", {
 
 function DatabaseCanvas({ projectId }: { projectId: string }) {
   const [view, setView] = useState<DatabaseView>("map");
+  const [detailEntity, setDetailEntity] = useState<string | null>(null);
   const isMiniStore = projectId === "01-mini-store";
   const isPulseBoard = projectId === "03-pulse-board";
-  const title = isMiniStore ? "MODELO RELACIONAL" : isPulseBoard ? "MODELO LOCAL · TASK" : "SIN MODELO PERSISTENTE";
-  const projectName = isMiniStore ? "01-MINI-STORE / SQLITE" : isPulseBoard ? "03-PULSE-BOARD / NAVEGADOR" : "02-FORMA-STUDIO / DOM";
+  const entities = entitiesByProject[projectId] ?? [];
+  const title = isMiniStore ? "MODELO RELACIONAL" : isPulseBoard ? "MODELO LOCAL · TASK" : "MODELO DE CONTENIDO";
+  const projectName = isMiniStore ? "01-MINI-STORE / SQLITE" : isPulseBoard ? "03-PULSE-BOARD / NAVEGADOR" : "02-FORMA-STUDIO / JS SEED";
 
   return (
-    <section className={`database-canvas${isPulseBoard ? " is-pulse" : ""}${!isMiniStore && !isPulseBoard ? " is-static" : ""}`} aria-label="Canvas del modelo de datos">
+    <section className={`database-canvas${isPulseBoard ? " is-pulse" : ""}${!isMiniStore && !isPulseBoard ? " is-static" : ""}`} aria-label="Canvas de datos del proyecto">
       <header className="anatomy-canvas__header">
         <div className="anatomy-canvas__identity">
           <span className="anatomy-canvas__mark"><Database size={13} aria-hidden="true" /></span>
@@ -62,26 +147,20 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
             <Link2 size={11} aria-hidden="true" /> MAPA
           </button>
           <button type="button" aria-pressed={view === "tables"} onClick={() => setView("tables")}>
-            <TableProperties size={11} aria-hidden="true" /> ENTIDADES
+            <TableProperties size={11} aria-hidden="true" /> DATOS
           </button>
         </div>
       </header>
 
       <div className="anatomy-canvas__metrics" aria-label="Resumen del modelo">
         {isMiniStore ? (
-          <>
-            <span><b>03</b> TABLAS</span><span><b>02</b> FK</span><span><b>04</b> SEEDS</span>
-          </>
+          <><span><b>03</b> TABLAS</span><span><b>02</b> FK</span><span><b>04</b> SEEDS</span></>
         ) : isPulseBoard ? (
-          <>
-            <span><b>01</b> OBJETO</span><span><b>09</b> CAMPOS</span><span><b>03</b> ESTADOS</span>
-          </>
+          <><span><b>01</b> MODELO</span><span><b>09</b> CAMPOS</span><span><b>03</b> ESTADOS</span></>
         ) : (
-          <>
-            <span><b>04</b> VISTAS</span><span><b>03</b> CASOS</span><span><b>00</b> STORAGE</span>
-          </>
+          <><span><b>04</b> VISTAS</span><span><b>03</b> CASOS</span><span><b>00</b> STORAGE</span></>
         )}
-        <span className="anatomy-canvas__source">{isMiniStore ? "SQL" : isPulseBoard ? "LOCAL" : "ESTÁTICO"}</span>
+        <span className="anatomy-canvas__source">{isMiniStore ? "SQL" : isPulseBoard ? "LOCAL" : "DOM"}</span>
       </div>
 
       {isMiniStore && view === "map" ? (
@@ -130,69 +209,62 @@ function DatabaseCanvas({ projectId }: { projectId: string }) {
             </div>
           </div>
         </div>
-      ) : isMiniStore ? (
+      ) : (
         <div className="database-entities">
-          {tables.map((table, index) => (
-            <article className="database-entity-card" key={table.name}>
+          {entities.map((entity) => (
+            <article className="database-entity-card" key={entity.name}>
               <div className="database-entity-card__head">
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{table.name}</strong>
-                <small>{table.role} · {table.fields.length} CAMPOS</small>
+                <span>{entity.role}</span>
+                <strong>{entity.name}</strong>
+                <small>{entity.rows.length} FILAS MUESTRA</small>
               </div>
               <div className="database-entity-card__keys">
-                <span><KeyRound size={9} /> PK {table.primaryKey}</span>
-                {table.foreignKeys.map((foreignKey) => <span key={foreignKey}><Link2 size={9} /> FK {foreignKey}</span>)}
+                {entity.keys.map((key) => <span key={key}><KeyRound size={9} /> {key}</span>)}
               </div>
-              <div className="database-entity-card__fields">
-                {table.fields.map((field) => (
-                  <span className={field.includes("price") || field === "stock" ? "is-business-field" : ""} key={field}>
-                    {field}
-                  </span>
+              <div className="database-entity-card__rows">
+                {entity.rows.slice(0, 2).map((row) => (
+                  <div className="database-entity-card__row" key={row.label}>
+                    <strong>{row.label}</strong><span>{row.summary}</span>
+                  </div>
                 ))}
               </div>
+              <button className="database-entity-card__detail" type="button" onClick={() => setDetailEntity(entity.name)}>
+                VER CONTENIDO <span>↗</span>
+              </button>
             </article>
           ))}
-          <p className="database-entities__note">customer_name vive en orders; no existe una tabla customers.</p>
-        </div>
-      ) : isPulseBoard ? (
-        <div className="local-model-map">
-          <article className="local-model-card">
-            <span>OBJETO / 07 SEEDS</span>
-            <strong><Database size={12} /> Task</strong>
-            <div>{["id", "title", "description", "status", "category", "priority", "due", "assignees[]", "mine"].map((field) => <i key={field}>{field}</i>)}</div>
-          </article>
-          <div className="local-model-flow"><span>FILTRA / AGRUPA</span><ArrowDown size={12} /></div>
-          <div className="local-model-states">
-            <span>TODO <b>03</b></span><span>DOING <b>02</b></span><span>DONE <b>02</b></span>
-          </div>
-          <div className="local-model-storage"><Database size={11} /> localStorage · pulse-board-tasks-v1</div>
-          <small>OBJETOS JSON EN NAVEGADOR · NO SON TABLAS SQL</small>
-        </div>
-      ) : (
-        <div className="local-model-map">
-          <article className="local-model-card local-model-card--static">
-            <span>DOM / ESTÁTICO</span>
-            <strong><LayoutPanelTopIcon /> Paneles de vista</strong>
-            <div>{["inicio", "estudio", "proyectos", "contacto"].map((viewName) => <i key={viewName}>{viewName}</i>)}</div>
-          </article>
-          <div className="local-model-flow"><span>CLICK → PROYECCIÓN</span><ArrowDown size={12} /></div>
-          <div className="local-model-states local-model-states--static">
-            <span>03 TARJETAS DE PROYECTO</span><span>1 DIALOG NATIVO</span>
-          </div>
-          <div className="local-model-storage"><Database size={11} /> Sin API · sin base · sin persistencia</div>
-          <small>EL CONTENIDO VIVE EN EL HTML / HASH DE NAVEGACIÓN</small>
+          <p className="database-entities__note">
+            {isMiniStore
+              ? "Muestra manual alineada al seeder; no es consulta runtime."
+              : isPulseBoard
+                ? "JSON inicial del tablero · no es una tabla SQL."
+                : "Proyectos estáticos en JS · no es una tabla SQL."}
+          </p>
+          {detailEntity && (
+            <div className="database-data-detail" role="dialog" aria-modal="false" aria-label={`Contenido de ${detailEntity}`}>
+              <header><strong>{detailEntity} · 2 FILAS MUESTRA</strong><button type="button" aria-label="Cerrar detalle" onClick={() => setDetailEntity(null)}><X size={13} /></button></header>
+              <div>
+                {entities.find((entity) => entity.name === detailEntity)?.rows.slice(0, 2).map((row) => (
+                  <article key={row.label}>
+                    <strong>{row.label}</strong>
+                    <pre>{JSON.stringify(row.data, null, 2)}</pre>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       <footer className="anatomy-canvas__tags">
-        <span>#ecommerce</span><span>#pedido</span><span>#inventario</span><span>#transacción</span>
+        {isMiniStore
+          ? <><span>#ecommerce</span><span>#pedido</span><span>#inventario</span><span>#transacción</span></>
+          : isPulseBoard
+            ? <><span>#kanban</span><span>#tareas</span><span>#json</span><span>#localstorage</span></>
+            : <><span>#portfolio</span><span>#contenido</span><span>#estático</span></>}
       </footer>
     </section>
   );
-}
-
-function LayoutPanelTopIcon() {
-  return <TableProperties size={12} aria-hidden="true" />;
 }
 
 export default DatabaseCanvas;

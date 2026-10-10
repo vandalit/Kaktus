@@ -32,6 +32,15 @@ The onboarding folder explorer reads real local directories under the demo
 root; navigation within that root is available, but changing the selected root
 is locked until folder selection is implemented.
 
+## GitHub Pages demo
+
+The `Deploy GitHub Pages` workflow publishes the frontend as a static demo from
+the `master` branch. To build the same artifact locally, run
+`npm --prefix frontend run build:pages`; the output is written to
+`frontend/dist/`. The Pages build opens directly in the Mini Store Multipista
+view and does not include the local API or filesystem access, so project
+anatomy shown there is illustrative demo content.
+
 ## Run in local development
 
 Use two terminals from the workspace root:
