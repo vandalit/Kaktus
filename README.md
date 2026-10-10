@@ -1,3 +1,5 @@
+![Kaktus — mapa visual de la anatomía del software](docs/Capturas/portada.png)
+
 # Kaktus
 
 Kaktus is a local, visual workspace for understanding and navigating software
