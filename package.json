@@ -1,0 +1,10 @@
+{
+  "name": "cejey",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual project explorer for local development folders.",
+  "scripts": {
+    "api": "node backend/server.js",
+    "dev": "npm --prefix frontend run dev"
+  }
+}

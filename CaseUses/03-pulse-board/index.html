@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f2f4f8">
+    <title>Pulse — tablero del equipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">p</span> pulse<span class="brand-dot">.</span></a>
+      <div class="workspace-switch"><span class="workspace-icon">N</span><span><b>Norte Studio</b><small>Workspace</small></span><span class="chevron">⌄</span></div>
+      <p class="side-label">WORKSPACE</p>
+      <nav class="side-nav" aria-label="Navegación del workspace">
+        <button class="side-link" data-page="overview" type="button"><span>▦</span> Resumen</button>
+        <button class="side-link is-active" data-page="board" type="button"><span>▤</span> Mi tablero <i id="active-count">0</i></button>
+        <button class="side-link" data-page="timeline" type="button"><span>◷</span> Actividad</button>
+      </nav>
+      <p class="side-label projects-label">PROYECTOS <button id="add-project" type="button" aria-label="Añadir proyecto">+</button></p>
+      <nav class="project-list" aria-label="Proyectos">
+        <button class="project-link is-selected" data-project="Rediseño web" type="button"><span class="project-dot dot-violet"></span>Rediseño web</button>
+        <button class="project-link" data-project="Lanzamiento app" type="button"><span class="project-dot dot-orange"></span>Lanzamiento app</button>
+        <button class="project-link" data-project="Marca Norte" type="button"><span class="project-dot dot-green"></span>Marca Norte</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="side-link" id="help-button" type="button"><span>?</span> Ayuda y atajos</button>
+        <div class="profile"><span class="avatar avatar-lilac">VP</span><span><b>Valentina Pérez</b><small>Plan gratuito</small></span><button id="reset-demo" type="button" title="Restablecer demo">···</button></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Proyectos</span><b>/</b><strong id="current-project">Rediseño web</strong></div>
+        <div class="top-actions"><button class="icon-button" id="notifications" type="button" aria-label="Notificaciones">♧<i></i></button><span class="avatar avatar-lilac">VP</span></div>
+      </header>
+
+      <section class="page-content">
+        <div class="page-heading">
+          <div><p class="overline">LUNES, 12 DE OCTUBRE, 2026 <span class="sun">✳</span></p><h1>Mi tablero</h1><p class="page-subtitle">Un paso a la vez. Lo estás haciendo bien.</p></div>
+          <button class="primary-button" id="new-task" type="button"><span>+</span> Nueva tarea</button>
+        </div>
+
+        <div class="summary-grid" aria-label="Resumen del proyecto">
+          <article class="summary-card"><div class="summary-top"><span>En este proyecto</span><span class="summary-icon icon-purple">▤</span></div><strong id="stat-total">0</strong><div class="summary-foot">tareas en total</div></article>
+          <article class="summary-card"><div class="summary-top"><span>En progreso</span><span class="summary-icon icon-blue">◷</span></div><strong id="stat-progress">0</strong><div class="summary-foot"><span class="mini-bar"><i id="progress-bar"></i></span><span id="progress-caption">0% del total</span></div></article>
+          <article class="summary-card"><div class="summary-top"><span>Completadas</span><span class="summary-icon icon-green">✓</span></div><strong id="stat-done">0</strong><div class="summary-foot"><span class="positive">●</span> buen ritmo</div></article>
+          <article class="summary-card focus-card"><div class="focus-shape"></div><span class="focus-label">RECUERDA</span><p>El progreso también<br>se construye descansando.</p><span class="focus-spark">✳</span></article>
+        </div>
+
+        <div class="board-toolbar">
+          <div class="view-switch" role="group" aria-label="Vista"><button class="is-selected" id="kanban-view" type="button">Kanban</button><button id="list-view" type="button">Lista</button></div>
+          <div class="board-tools">
+            <label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Buscar tarea..." aria-label="Buscar tareas"><kbd>⌘ K</kbd></label>
+            <select id="assignee-filter" aria-label="Filtrar por responsable"><option value="all">Todos</option><option value="you">Asignadas a mí</option></select>
+            <button class="filter-button" id="priority-filter" type="button" aria-pressed="false">☷ <span>Prioridad</span></button>
+            <button class="members-button" type="button" aria-label="Miembros del proyecto"><span class="avatar avatar-peach">AM</span><span class="avatar avatar-blue">JC</span><span class="avatar avatar-lilac">VP</span><b>+2</b></button>
+          </div>
+        </div>
+
+        <div class="board" id="board">
+          <section class="board-column" data-status="todo">
+            <header class="column-heading"><div><span class="status-dot todo-dot"></span><h2>Por hacer</h2><span class="column-count" data-count="todo">0</span></div><button class="column-menu" type="button" aria-label="Opciones Por hacer">···</button></header>
+            <div class="task-list" data-list="todo"></div>
+            <button class="add-task-inline" data-add-status="todo" type="button">+ Añadir tarea</button>
+          </section>
+          <section class="board-column" data-status="doing">
+            <header class="column-heading"><div><span class="status-dot doing-dot"></span><h2>En progreso</h2><span class="column-count" data-count="doing">0</span></div><button class="column-menu" type="button" aria-label="Opciones En progreso">···</button></header>
+            <div class="task-list" data-list="doing"></div>
+            <button class="add-task-inline" data-add-status="doing" type="button">+ Añadir tarea</button>
+          </section>
+          <section class="board-column" data-status="done">
+            <header class="column-heading"><div><span class="status-dot done-dot"></span><h2>Completado</h2><span class="column-count" data-count="done">0</span></div><button class="column-menu" type="button" aria-label="Opciones Completado">···</button></header>
+            <div class="task-list" data-list="done"></div>
+            <button class="add-task-inline" data-add-status="done" type="button">+ Añadir tarea</button>
+          </section>
+        </div>
+        <p id="empty-message" class="empty-message" hidden>No encontramos tareas con esos filtros. Prueba otra búsqueda.</p>
+      </section>
+    </main>
+
+    <dialog class="task-dialog">
+      <form id="task-form">
+        <div class="dialog-heading"><div><p class="overline">TAREA DEL PROYECTO</p><h2 id="dialog-title">Nueva tarea</h2></div><button class="dialog-close" type="button" aria-label="Cerrar">×</button></div>
+        <input id="task-id" name="id" type="hidden">
+        <label for="task-title">Nombre de la tarea</label>
+        <input id="task-title" name="title" maxlength="100" required placeholder="Ej. Revisar prototipo con el equipo">
+        <label for="task-description">Descripción <span>OPCIONAL</span></label>
+        <textarea id="task-description" name="description" rows="3" maxlength="300" placeholder="Añade un poco de contexto..."></textarea>
+        <div class="form-row"><div><label for="task-status">Estado</label><select id="task-status" name="status"><option value="todo">Por hacer</option><option value="doing">En progreso</option><option value="done">Completado</option></select></div><div><label for="task-priority">Prioridad</label><select id="task-priority" name="priority"><option value="normal">Normal</option><option value="high">Alta</option><option value="low">Baja</option></select></div></div>
+        <div class="dialog-actions"><button id="delete-task" class="delete-button" type="button" hidden>Eliminar</button><span></span><button class="cancel-button" type="button">Cancelar</button><button class="primary-button" type="submit">Guardar tarea</button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

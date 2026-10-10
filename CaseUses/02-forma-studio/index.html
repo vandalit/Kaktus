@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f2ed">
+    <title>Forma — estudio independiente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="#inicio" aria-label="Forma, inicio">forma<span>®</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <button class="nav-link is-active" data-view="inicio" type="button">Inicio <span>01</span></button>
+        <button class="nav-link" data-view="estudio" type="button">Estudio <span>02</span></button>
+        <button class="nav-link" data-view="proyectos" type="button">Proyectos <span>03</span></button>
+        <button class="nav-link" data-view="contacto" type="button">Contacto <span>04</span></button>
+      </nav>
+      <a class="availability" href="#contacto"><span></span> Disponible para proyectos</a>
+    </header>
+
+    <main>
+      <section class="view is-active" id="inicio" data-view-panel="inicio">
+        <div class="hero">
+          <div class="hero-copy reveal">
+            <p class="eyebrow">ESTUDIO INDEPENDIENTE · SANTIAGO / EN TODAS PARTES</p>
+            <h1>Ideas claras.<br><span>Formas que</span><br>permanecen<span class="period">.</span></h1>
+            <div class="hero-bottom">
+              <p>Diseñamos identidades y experiencias digitales para personas que quieren hacer las cosas de otra manera.</p>
+              <button class="round-link" type="button" data-go="proyectos" aria-label="Ver proyectos">↘</button>
+            </div>
+          </div>
+          <div class="hero-art reveal" aria-label="Composición abstracta con formas de color">
+            <div class="art-orbit orbit-one"></div>
+            <div class="art-orbit orbit-two"></div>
+            <div class="art-sun"></div>
+            <div class="art-card">
+              <span>F / 26</span>
+              <span>FORMA<br>FUTURA</span>
+            </div>
+            <div class="art-caption">OBJETOS DIGITALES<br>CON INTENCIÓN</div>
+            <div class="art-spark">✳</div>
+          </div>
+          <div class="hero-index"><span>01</span><span>—</span><span>04</span></div>
+        </div>
+        <div class="ticker" aria-hidden="true">
+          <div class="ticker-track">ESTRATEGIA <span>✳</span> IDENTIDAD <span>✳</span> DIGITAL <span>✳</span> CULTURA <span>✳</span> ESTRATEGIA <span>✳</span> IDENTIDAD <span>✳</span> DIGITAL <span>✳</span> CULTURA <span>✳</span></div>
+        </div>
+      </section>
+
+      <section class="view" id="estudio" data-view-panel="estudio" hidden>
+        <div class="subpage">
+          <div class="section-heading reveal">
+            <p class="eyebrow">02 / EL ESTUDIO</p>
+            <h2>Pequeño por elección.<br><span>Curioso por naturaleza.</span></h2>
+          </div>
+          <div class="studio-grid">
+            <div class="studio-note reveal">
+              <span class="note-mark">f.</span>
+              <p>Somos un estudio independiente que combina estrategia, diseño y tecnología para convertir buenas preguntas en experiencias memorables.</p>
+              <p class="muted">Trabajamos en equipos pequeños, colaborando de cerca y cuidando cada detalle del proceso.</p>
+            </div>
+            <div class="principles">
+              <article class="principle reveal"><span>01</span><div><h3>Menos ruido</h3><p>Buscamos la idea que ordena todo lo demás.</p></div><span class="principle-icon">↗</span></article>
+              <article class="principle reveal"><span>02</span><div><h3>Más intención</h3><p>Cada decisión visual tiene algo que decir.</p></div><span class="principle-icon">↗</span></article>
+              <article class="principle reveal"><span>03</span><div><h3>Juntos, mejor</h3><p>La colaboración también forma parte del diseño.</p></div><span class="principle-icon">↗</span></article>
+            </div>
+          </div>
+          <div class="manifesto reveal"><span>LO QUE NOS MUEVE</span><p>Hacer espacio para que las ideas importantes <em>se vean.</em></p><span>EST. 2021 — SIN PRISA, PERO SIN PAUSA</span></div>
+        </div>
+      </section>
+
+      <section class="view" id="proyectos" data-view-panel="proyectos" hidden>
+        <div class="subpage">
+          <div class="section-heading projects-heading reveal">
+            <div><p class="eyebrow">03 / TRABAJO SELECCIONADO</p><h2>Hecho con<br><span>las manos y la cabeza.</span></h2></div>
+            <p>Una pequeña muestra de colaboraciones recientes.<br>Ideas distintas, la misma curiosidad.</p>
+          </div>
+          <div class="project-grid">
+            <button class="project-card project-one reveal" data-project="Casa Nube" data-description="Un refugio de montaña que necesitaba sentirse tan cálido en pantalla como en persona. Identidad, dirección de arte y experiencia web." type="button">
+              <span class="project-visual cloud-visual"><span class="cloud-sun"></span><span class="cloud-shape"></span><span class="visual-label">CASA<br>NUBE</span></span>
+              <span class="project-meta"><span>CASA NUBE — HOSPITALIDAD</span><span>2025 ↗</span></span>
+            </button>
+            <button class="project-card project-two reveal" data-project="Marea" data-description="Una identidad fluida para una marca de cuidado personal que encuentra inspiración en el ritmo del océano. Estrategia, identidad y packaging." type="button">
+              <span class="project-visual marea-visual"><span class="marea-disc"></span><span class="marea-wave"></span><span class="visual-label">marea<br>rituales diarios</span></span>
+              <span class="project-meta"><span>MAREA — CUIDADO PERSONAL</span><span>2024 ↗</span></span>
+            </button>
+            <button class="project-card project-three reveal" data-project="Feria Local" data-description="Una plataforma que conecta a productores independientes con los barrios que quieren comprar más cerca y con más sentido. Producto digital y dirección de arte." type="button">
+              <span class="project-visual feria-visual"><span class="feria-flower">✳</span><span class="visual-label">FERIA<br>LOCAL</span><span class="feria-sticker">hecho<br>cerca</span></span>
+              <span class="project-meta"><span>FERIA LOCAL — COMUNIDAD</span><span>2024 ↗</span></span>
+            </button>
+            <div class="project-aside reveal"><span>¿TIENES UNA IDEA?</span><p>Nos gusta empezar por las preguntas.</p><button type="button" data-go="contacto">Hablemos <span>↗</span></button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="contacto" data-view-panel="contacto" hidden>
+        <div class="contact-page">
+          <div class="contact-main reveal">
+            <p class="eyebrow">04 / SIGUIENTE CAPÍTULO</p>
+            <h2>¿Y si hacemos<br><span>algo bueno?</span></h2>
+            <a class="email-link" href="mailto:hola@forma.studio">hola@forma.studio <span>↗</span></a>
+          </div>
+          <div class="contact-side reveal">
+            <div class="contact-symbol">f.</div>
+            <p>Cuéntanos qué tienes entre manos. Una nota, una idea a medio hacer o solo un hola.</p>
+            <div class="contact-details"><span>SANTIAGO, CHILE<br>TRABAJAMOS EN TODAS PARTES</span><span>INSTAGRAM ↗<br>LINKEDIN ↗</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>© FORMA ESTUDIO 2026</span><span>DISEÑADO CON TIEMPO Y ATENCIÓN</span><button type="button" data-go="inicio">VOLVER ARRIBA ↑</button></footer>
+
+    <dialog class="project-dialog">
+      <button class="dialog-close" type="button" aria-label="Cerrar">×</button>
+      <p class="eyebrow">CASO SELECCIONADO</p>
+      <h2></h2>
+      <p class="dialog-description"></p>
+      <span class="dialog-foot">FORMA ESTUDIO · TRABAJO EN COLABORACIÓN</span>
+    </dialog>
+    <script src="app.js"></script>
+  </body>
+</html>
