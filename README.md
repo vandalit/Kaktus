@@ -18,9 +18,9 @@ Product structure and UX contracts:
 - [SQLite and backend roadmap](./docs/roadmap/sqlite-y-backend.md)
 
 See [Bitacora.md](./Bitacora.md) for implementation history and current status.
-The next implementation phase adds a local SQLite metadata index and basic API;
-the database is not implemented yet, and the filesystem remains authoritative
-for project contents.
+The backend now opens a local SQLite database and applies the initial schema;
+the filesystem remains authoritative, and project metadata is not indexed in
+SQLite yet.
 
 ## Run in local development
 
@@ -36,6 +36,7 @@ npm run dev
 ```
 
 Open the Vite URL printed in the frontend terminal. The current API is bound to
-`127.0.0.1:4170` and reads summaries, project trees and selected text files
-from `CaseUses/`. File access is read-only and bounded. SQLite persistence is
-the next backend phase; it is not active yet.
+`127.0.0.1:4170`, reads summaries, project trees and selected text files from
+`CaseUses/`, and initializes its SQLite schema under the user data directory.
+File access is read-only and bounded. Persisted scans and preferences are not
+connected yet.

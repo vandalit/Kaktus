@@ -365,9 +365,35 @@ preferencias, conectar el frontend y validar persistencia/errores.
 - SQLite es local y almacena identidades, metadatos, snapshots y preferencias;
   el filesystem conserva autoridad sobre archivos/contenido.
 - No almacenar contenido fuente, credenciales, eventos mock ni telemetría.
-- El runtime actual es Node 20.20. Se propone `better-sqlite3` sin ORM para el
-  backend local, sujeto a confirmar plataformas de distribución e instalación
-  nativa antes de cambiar dependencias.
+- Desarrollo actual: Node 20.20 en WSL; primer MVP local para Linux/WSL.
+  `better-sqlite3` sin ORM fue añadido para SQLite. El paquete nativo deberá
+  compilarse y validarse de nuevo en Windows nativo antes de distribuir el
+  ejecutable Windows.
 - La API actual ya lee summaries, árbol y archivos de `CaseUses/`; el trabajo
   futuro sustituye summaries/árbol por snapshots indexados sin relajar las
   validaciones de lectura de archivo.
+
+### Inicio de SQLite y scaffolding del backend
+
+- Se incorporó `better-sqlite3` como driver para Node 20 y se creó
+  `backend/database.js`, separado del servidor HTTP, con migraciones versionadas,
+  activación de foreign keys, timeout de escritura y permisos privados para
+  directorio/archivo de DB en Linux.
+- La migración `001_initial.sql` implementa workspaces, roots, projects,
+  scans, technologies, filesystem entries y preferencias. El API abre la DB al
+  iniciar y cierra su conexión en SIGINT/SIGTERM; todavía no persiste el índice
+  ni lee endpoints desde SQLite.
+- Se añadió `npm run test:backend`; 4 pruebas verifican directorio de datos
+  Linux/Windows, migración idempotente, claves/constraints y rollback.
+- Node `20.20.0` en este entorno WSL. Se confirmó que `node:sqlite` no está
+  disponible aquí; `better-sqlite3` compila y pasa pruebas Linux/WSL. Esto no
+  valida un runtime/instalador Windows.
+- Objetivo de distribución: un solo producto/repositorio portable; Linux/WSL
+  para desarrollo inicial y build Windows futuro para Gumroad. El binario
+  comercial deberá empaquetar runtime y addon nativo y probarse en Windows
+  nativo. Repositorios bajo WSL desde Windows requerirán validación explícita de
+  acceso y watchers; no asumir que `\\wsl$` funciona como un filesystem nativo.
+- Dependencias locales raíz quedan ignoradas vía `.gitignore`; lockfile npm
+  registra el driver.
+- Siguiente: servicio de seed/escaneo sobre `CaseUses/`, transacciones y pruebas
+  de fallo antes de exponer endpoints nuevos o conectar la UI.

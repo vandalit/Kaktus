@@ -1,7 +1,7 @@
 # Modelo de datos y persistencia local
 
-**Estado:** dirección acordada; esquema listo para revisión técnica. SQLite y
-las nuevas rutas de persistencia todavía no están implementadas.
+**Estado:** esquema inicial implementado por migración; todavía no hay escaneos,
+preferencias ni endpoints que lean/escriban metadata persistida.
 
 ## Decisiones de arquitectura
 
@@ -234,18 +234,21 @@ No incluye selector de carpeta real, conexión GitHub, cuentas/perfiles,
 sincronización remota, edición de archivos, historial de chat, telemetría ni
 métricas simuladas. No requiere tablas configurables de vistas.
 
-## Decisiones técnicas a validar antes de escribir código
+## Decisiones técnicas y plataforma
 
-1. **Runtime SQLite:** el entorno documentado es Node 20.20. `node:sqlite` no
-   está disponible en ese runtime; propuesta: mantener Node 20 y usar
-   `better-sqlite3` sin ORM para la API local de baja concurrencia. Alternativa:
-   elevar el mínimo de Node a una versión con `node:sqlite` estable.
-2. **Soporte de sistemas operativos:** confirmar plataformas de distribución
-   para resolver el directorio de datos y probar la dependencia nativa.
+1. **Runtime SQLite — decidido:** desarrollo actual en Node 20.20 bajo WSL;
+   el driver `better-sqlite3` sin ORM está instalado y probado en Linux/WSL.
+   `node:sqlite` no está disponible en ese runtime. La distribución Windows
+   requiere compilar y probar el addon nativo en Windows nativo; WSL no cuenta
+   como esa validación.
+2. **Directorios de datos — MVP:** Linux usa `XDG_DATA_HOME` o
+   `~/.local/share/kaktus`; Windows usará `LOCALAPPDATA/Kaktus`. `KAKTUS_DATA_DIR`
+   permite pruebas y configuración explícita en ambos. La selección del
+   directorio de repositorios no se restringe al directorio de DB.
 3. **Retención de escaneos:** mantener snapshots previos en MVP para preservar
    el último correcto; definir más adelante política de limpieza/cantidad.
 4. **Preferencias de proyecto:** confirmar si recordar archivo activo es útil;
    es nullable y se puede omitir del primer endpoint sin alterar el modelo.
 
-Los demás límites para el primer incremento están fijados en la
+Los demás límites para el siguiente incremento están fijados en la
 [hoja de ruta SQLite y backend](../roadmap/sqlite-y-backend.md).

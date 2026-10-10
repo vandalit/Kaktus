@@ -1,7 +1,7 @@
 # Hoja de ruta: SQLite y backend local
 
-**Estado:** preparación aprobada; aún no se implementan SQLite ni cambios del
-backend.  
+**Estado:** infraestructura SQLite y migración inicial implementadas en
+Linux/WSL; listado, árbol y preferencias aún no están conectados a la persistencia.
 **Objetivo:** pasar de lecturas filesystem directas a un índice local
 reconstruible con preferencias persistentes, sin alterar el flujo visual ni
 guardar contenido fuente.
@@ -21,35 +21,36 @@ guardar contenido fuente.
 
 ## Etapas
 
-### 0. Cerrar contrato técnico corto
+### 0. Contrato técnico inicial (MVP Linux/WSL)
 
-- Confirmar el runtime de soporte y driver: en el entorno actual Node 20.20,
-  por lo que se recomienda `better-sqlite3` sin ORM; no usar `node:sqlite` sin
-  subir el mínimo de Node.
-- Definir directorio de datos por plataforma y override `KAKTUS_DATA_DIR`.
-- Confirmar que la primera versión arranca con un workspace/origen demo y que
-  la base puede representar otros workspaces/orígenes sin habilitar su
-  selección real.
+- Desarrollo actual: Node 20.20 bajo WSL; primer MVP local para Linux/WSL.
+- Driver elegido para esta fase: `better-sqlite3` sin ORM. `node:sqlite` no se
+  usa porque no está disponible en el runtime actual.
+- DB fuera del repositorio: `XDG_DATA_HOME/kaktus` o
+  `~/.local/share/kaktus`; `KAKTUS_DATA_DIR` permite aislamiento de
+  tests/configuración.
+- La primera ejecución registra únicamente `CaseUses/`; el modelo admite
+  varios orígenes, pero el backend todavía no permite seleccionar una ruta
+  arbitraria.
 
-**Salida:** ADR/decisión breve en el modelo, dependencias y alcance cerrados.
-**No empezar código** si la dependencia no puede instalarse/ejecutarse en las
-plataformas objetivo.
+**Completada:** runtime, driver y alcance MVP fijados. Las pruebas en WSL no
+equivalen a validar un instalador Windows.
 
-### 1. Crear infraestructura SQLite y migraciones
+### 1. Crear infraestructura SQLite y migraciones — completada
 
-- Añadir acceso de DB aislado del servidor HTTP, habilitar foreign keys y
-  timeout para escrituras.
-- Implementar `schema_migrations` y la migración inicial descrita en
-  [modelo-de-datos.md](../data/modelo-de-datos.md).
-- Crear/open DB bajo directorio de usuario, respetar override, no ponerla en el
-  repo y fallar explícitamente si no puede inicializarse.
-- Asegurar que repetir arranque/migraciones sea idempotente; no reiniciar ni
-  borrar una DB existente.
+- Acceso SQLite separado en `backend/database.js`; foreign keys y timeout de
+  escritura activados.
+- Migración `001_initial.sql` y tabla `schema_migrations` versionadas.
+- DB fuera del repositorio en XDG data dir; override `KAKTUS_DATA_DIR`.
+- El backend abre la base e informa error de inicialización; al cerrar HTTP se
+  cierra la conexión SQLite.
+- Cobertura de resolución de data dir Linux/Windows, migración repetida,
+  constraints y rollback de una migración fallida.
 
-**Pruebas:** migración desde DB vacía, repetición, constraints y claves foráneas,
-ruta temporal aislada, fallo de apertura/migración.
+**Verificación:** `npm run test:backend` (4 pruebas) y `node --check` pasan en
+Linux/WSL.
 
-### 2. Añadir repositorios y escaneo transaccional
+### 2. Añadir repositorios y escaneo transaccional — siguiente paso
 
 - Separar acceso SQL de reglas filesystem: repositorio para workspaces,
   proyectos y preferencias; servicio de escaneo reutiliza y extrae las reglas
@@ -63,6 +64,9 @@ ruta temporal aislada, fallo de apertura/migración.
 - Hacer el escaneo inicial al bootstrap si no existe snapshot completo;
   posteriores escaneos serán explícitos, nunca un recorrido completo por cada
   GET del dashboard.
+- Mantener `CaseUses/` como única raíz MVP; abstraer la raíz para habilitar
+  directorios de repositorios elegidos después, sin abrir selector arbitrario
+  en esta etapa.
 
 **Pruebas:** snapshot reproducible, fallo a mitad de recorrido, preservación de
 último snapshot exitoso, raíz ausente/inaccesible, ruta ignorada y symlink.
@@ -111,7 +115,24 @@ escaneo y traversal/symlink.
 **Pruebas:** navegación existente, URL directa/atrás-adelante, preferencias,
 reapertura de proyecto, archivo desaparecido, carga/error/vacío y responsive.
 
-### 5. Revisión, documentación y salida
+### 5. Actualización live de repositorios locales
+
+- Después de estabilizar escaneo/API y la raíz configurable, añadir watcher
+  filesystem cuando la plataforma lo soporte y reconciliación periódica o manual
+  como recuperación de eventos perdidos.
+- Debounce/batch de eventos; ignorar carpetas de build/dependencias y aplicar
+  límites para repositorios grandes. No recalcular en cada request.
+- Exponer estado/última fecha de escaneo y actualizar snapshot de forma atómica;
+  evento incompleto nunca marca archivos ausentes.
+- En WSL probar filesystem Linux y montajes Windows bajo `/mnt/<drive>`; anotar
+  diferencias de rendimiento/eventos por filesystem. No asumir que un proceso
+  Windows puede leer de forma fiable `\\wsl$`.
+
+**Criterio:** cambios locales aparecen con latencia acotada, sin pérdida de
+consistencia si watcher no entrega eventos. Medir latencia objetivo después del
+primer prototipo, no asumir un número antes de perfilar.
+
+### 6. Revisión, documentación y salida
 
 - Validar desde DB nueva y DB ya migrada hasta dashboard, resumen y Studio.
 - Revisar que la DB no incluya contenido fuente, paths absolutos en API,
@@ -138,6 +159,32 @@ Selección real de carpetas, GitHub/clonado, autenticación, múltiples usuarios
 sincronización nube, escritura/edición, terminal ejecutable, asistente, FTS,
 telemetría, métricas reales de salud y personalización de catálogos de vistas.
 
+## Camino futuro a distribución Windows
+
+La meta comercial Windows es compatible con un MVP abierto Linux/WSL: es el
+mismo producto y backend, no dos paradigmas ni dos implementaciones. Mantener un
+solo repositorio y código portable; variar empaquetado, integración de
+plataforma y licencia/distribución.
+
+Después de cerrar el MVP local:
+
+1. Probar `better-sqlite3` y el backend en Windows nativo/CI Windows, no inferir
+   compatibilidad desde WSL.
+2. Resolver y probar directorio de datos Windows con `LOCALAPPDATA/Kaktus`;
+   respetar `KAKTUS_DATA_DIR`.
+3. Elegir empaquetador para incluir frontend, backend, Node y addon nativo, y
+   servir el frontend desde la aplicación de escritorio.
+4. Añadir permiso explícito para que el usuario elija una o más raíces locales;
+   permitir WSL paths cuando el proceso Windows tenga acceso, sin asumir que
+   `\\wsl$` está siempre disponible.
+5. Ejecutar build firmado/instalador, pruebas limpias de instalación,
+   actualización, desinstalación, backup DB y detección de directorios
+   inaccesibles.
+6. Documentar licencias, política de actualizaciones y canal de soporte de la
+   distribución pagada. El código open source y el build comercial pueden
+   compartir repositorio si la licencia elegida lo permite; revisar licencia y
+   modelo de negocio antes de cobrar por binarios/soporte.
+
 ## Riesgos y mitigaciones
 
 | Riesgo | Mitigación |
@@ -149,8 +196,9 @@ telemetría, métricas reales de salud y personalización de catálogos de vista
 | Preferencias divergen de rutas existentes | Catálogo validado; URL prevalece durante la navegación actual |
 | Se expone una ruta local sensible | No devolver ruta absoluta ni incluirla en errores públicos |
 
-## Siguiente sesión de trabajo
+## Siguiente paso inmediato
 
-Comenzar únicamente por la etapa 0 y la migración inicial. No modificar todavía
-el layout, el modelo visual ni abrir soporte de orígenes remotos. La aprobación
-de la migración debe preceder a endpoints nuevos y a la conexión del frontend.
+Implementar únicamente la etapa 2: seed demo y servicio de escaneo transaccional
+en tests sobre una carpeta temporal; no cambiar todavía endpoints existentes ni
+el frontend. Luego verificar snapshots correctos, errores y preservación del
+último escaneo válido antes de exponer esos datos por HTTP.

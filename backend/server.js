@@ -1,6 +1,7 @@
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
+const { openDatabase } = require("./database");
 
 const projectRoot = path.resolve(__dirname, "..");
 const casesDirectory = path.join(projectRoot, "CaseUses");
@@ -29,6 +30,7 @@ const mimeByExtension = {
   ".go": "Go"
 };
 const maxEditorFileSize = 1024 * 1024;
+const database = openDatabase();
 
 async function readProjectSummary(directory) {
   try {
@@ -285,5 +287,14 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`API local de Kaktus disponible en http://127.0.0.1:${port}`);
+  console.log(`API local de Kaktus disponible en http://127.0.0.1:${port} (SQLite inicializada).`);
 });
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => {
+    server.close(() => {
+      database.close();
+      process.exit(0);
+    });
+  });
+}

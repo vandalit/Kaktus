@@ -5,6 +5,10 @@
   "description": "Visual project explorer for local development folders.",
   "scripts": {
     "api": "node backend/server.js",
-    "dev": "npm --prefix frontend run dev"
+    "dev": "npm --prefix frontend run dev",
+    "test:backend": "node --test backend/test"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1"
   }
 }
