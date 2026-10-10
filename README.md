@@ -1,9 +1,24 @@
-# CeJey
+# Kaktus
 
-CeJey starts as a local visual explorer for development projects. The first
-screen reads project folders from `CaseUses/` and shows their file/folder
-counts and an inferred stack. Project details and source editing are future
-steps.
+Kaktus is a local, visual workspace for understanding and navigating software
+projects. The current frontend reads project summaries from `CaseUses/`. The
+product design phase defines an IDE-like flow: mock onboarding, a project
+dashboard with its own view modes, and per-project detail views. Onboarding and
+editing controls will be clearly marked as simulated; project data continues to
+come from the local filesystem.
+
+The current product proposals are:
+
+- [Information architecture](./docs/product/arquitectura-de-informacion.md)
+- [UX proposal](./docs/product/experiencia-ux.md)
+- [Navigation and screens](./docs/product/navegacion-y-pantallas.md)
+- [Product logic](./docs/product/logica-del-producto.md)
+- [Frontend conventions](./docs/product/convenciones-frontend.md)
+- [Data model proposal](./docs/data/modelo-de-datos.md)
+
+See [Bitacora.md](./Bitacora.md) for the current implementation state and
+step-by-step work roadmap. Validate these proposals with Figma before building
+the frontend view structure.
 
 ## Run in local development
 

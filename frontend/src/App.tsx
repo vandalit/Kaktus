@@ -17,16 +17,12 @@ import {
   Sparkles,
   X
 } from "lucide-react";
-
-type Project = {
-  id: string;
-  title: string;
-  description: string;
-  folders: number;
-  files: number;
-  stack: string[];
-  projectType: string;
-};
+import OnboardingScreen from "./screens/OnboardingScreen";
+import ConsoleDashboardView from "./screens/ConsoleDashboardView";
+import ProjectDetailScreen from "./screens/ProjectDetailScreen";
+import StudioIdeScreen from "./screens/StudioIdeScreen";
+import DashboardViewSwitcher from "./components/DashboardViewSwitcher";
+import type { DashboardView, Project } from "./types";
 
 type ProjectsResponse = {
   projects: Project[];
@@ -35,7 +31,17 @@ type ProjectsResponse = {
 
 const accents = ["violet", "peach", "mint", "blue"];
 
-function App() {
+type DashboardScreenProps = {
+  projectId: string | null;
+  dashboardView: DashboardView;
+  onOpenProject: (project: Project) => void;
+  onOpenStudio: (project: Project) => void;
+  onBackToProject: (project: Project) => void;
+  onBackToDashboard: () => void;
+  onChangeDashboardView: (view: DashboardView) => void;
+};
+
+function DashboardScreen({ projectId, studioView, dashboardView, onOpenProject, onOpenStudio, onBackToProject, onBackToDashboard, onChangeDashboardView }: DashboardScreenProps & { studioView: boolean }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState("");
   const [flipped, setFlipped] = useState<string[]>([]);
@@ -43,9 +49,7 @@ function App() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [sortNewest, setSortNewest] = useState(true);
-  const [notice, setNotice] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const noticeTimer = useRef<number | null>(null);
 
   async function loadProjects() {
     setLoading(true);
@@ -66,6 +70,10 @@ function App() {
   useEffect(() => {
     void loadProjects();
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [projectId]);
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
@@ -109,17 +117,17 @@ function App() {
   }
 
   function openProject(project: Project) {
-    setNotice(`La vista de detalle de “${project.title}” será el siguiente paso.`);
-    if (noticeTimer.current !== null) window.clearTimeout(noticeTimer.current);
-    noticeTimer.current = window.setTimeout(() => setNotice(""), 2600);
+    onOpenProject(project);
   }
+
+  const selectedProject = projects.find((project) => project.id === projectId) ?? null;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="#inicio" aria-label="CeJey, inicio">
+        <a className="brand" href="/" aria-label="Kaktus, inicio">
           <span className="brand-mark"><span /></span>
-          <span>ce<span>j</span>ey</span>
+          <span>Kaktus</span>
           <span className="brand-beta">LAB</span>
         </a>
 
@@ -138,19 +146,51 @@ function App() {
         <div className="sidebar-bottom">
           <div className="local-status"><span className="status-pulse" /><span><strong>Solo local</strong><small>Tus archivos no salen de aquí</small></span></div>
           <button className="sidebar-profile" type="button" onClick={copyPath}>
-            <span className="profile-avatar">CJ</span><span><strong>CeJey explorer</strong><small>{copied ? "Ruta copiada" : "Directorio raíz"}</small></span>
+            <span className="profile-avatar">K</span><span><strong>Kaktus</strong><small>{copied ? "Ruta copiada" : "Directorio raíz"}</small></span>
             {copied ? <Check size={15} /> : <ArrowUpRight size={15} />}
           </button>
         </div>
       </aside>
 
       <main className="main-area" id="proyectos">
-        <header className="topbar">
+        {!projectId && <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-divider">/</span><strong>Proyectos</strong></div>
-          <div className="topbar-right"><span className="local-badge"><span /> LOCAL WORKSPACE</span><span className="topbar-divider" /><button className="avatar-button" type="button" aria-label="Perfil CeJey">CJ</button></div>
-        </header>
+          <div className="topbar-right">
+            <DashboardViewSwitcher activeView={dashboardView} onChange={onChangeDashboardView} />
+            <span className="local-badge"><span /> LOCAL WORKSPACE</span><span className="topbar-divider" /><button className="avatar-button" type="button" aria-label="Perfil Kaktus">K</button>
+          </div>
+        </header>}
 
-        <div className="content-wrap">
+        {projectId ? (
+          selectedProject ? (
+            studioView ? (
+              <StudioIdeScreen
+                project={selectedProject}
+                onBack={() => onBackToProject(selectedProject)}
+              />
+            ) : (
+              <ProjectDetailScreen
+                project={selectedProject}
+                onBack={onBackToDashboard}
+                onEdit={() => onOpenStudio(selectedProject)}
+              />
+            )
+          ) : (
+            <div className="project-detail__missing" role={loading ? "status" : "alert"}>
+              <strong>{loading ? "Cargando proyecto..." : "No encontramos este proyecto"}</strong>
+              {!loading && <button className="button-secondary" type="button" onClick={onBackToDashboard}>Volver a proyectos</button>}
+              {error && <span>{error}</span>}
+            </div>
+          )
+        ) : dashboardView === "console" ? (
+          <div className="content-wrap content-wrap--console">
+            <ConsoleDashboardView
+              projects={visibleProjects}
+              loading={loading}
+              error={error}
+            />
+          </div>
+        ) : <div className="content-wrap">
           <section className="intro-row">
             <div className="intro-copy">
               <div className="overline"><span className="overline-line" /> MAPA DEL WORKSPACE <span className="overline-index">01 — 03</span></div>
@@ -179,7 +219,7 @@ function App() {
               <span className="note-mark"><Sparkles size={15} /></span>
               <span className="note-text"><strong>{copied ? "Ruta copiada" : "Tu mapa empieza aquí"}</strong><small>{copied ? "CaseUses/ está en el portapapeles" : "Una lectura local. Sin subir archivos."}</small></span>
               <ArrowUpRight size={16} className="note-arrow" />
-              <span className="note-decoration" aria-hidden="true">C/J</span>
+              <span className="note-decoration" aria-hidden="true">K</span>
             </button>
           </section>
 
@@ -207,7 +247,8 @@ function App() {
                   return (
                     <article className={`project-card card-${accent}${index === 0 ? " card-featured" : ""}${isFlipped ? " is-flipped" : ""}`} key={project.id}>
                       <div className="card-inner">
-                        <div className="card-face card-front">
+                        <div className="card-face card-front" inert={isFlipped}>
+                          <button className="card-open-overlay" type="button" aria-label={`Abrir detalle de ${project.title}`} onClick={() => openProject(project)} />
                           <div className="card-topline">
                             <span className="project-type"><span className="type-dot" />{project.projectType}</span>
                             <button className="flip-control" type="button" aria-label={`Ver ficha de ${project.title}`} aria-pressed={isFlipped} onClick={() => toggleFlip(project.id)}><ArrowDownUp size={15} /></button>
@@ -225,14 +266,15 @@ function App() {
                             <div className="card-footer"><span><Folder size={13} /> {project.folders} carpetas</span><span className="footer-divider" /><span>{project.files} archivos</span><button type="button" onClick={() => openProject(project)}>Explorar <ArrowRight size={14} /></button></div>
                           </div>
                         </div>
-                        <div className="card-face card-back">
+                        <div className="card-face card-back" inert={!isFlipped}>
+                          <button className="card-open-overlay" type="button" aria-label={`Abrir detalle de ${project.title}`} onClick={() => openProject(project)} />
                           <div className="back-header"><span className="back-kicker"><Sparkles size={13} /> FICHA RÁPIDA</span><button className="flip-control" type="button" aria-label={`Volver a ${project.title}`} onClick={() => toggleFlip(project.id)}><X size={15} /></button></div>
                           <div className="back-title">{project.title}<span> / anatomía</span></div>
                           <p className="back-description">{project.description}</p>
                           <div className="back-stats"><div><strong>{project.folders.toString().padStart(2, "0")}</strong><span>carpetas</span></div><div><strong>{project.files.toString().padStart(2, "0")}</strong><span>archivos</span></div><div><strong>{project.stack.length.toString().padStart(2, "0")}</strong><span>tecnologías</span></div></div>
                           <div className="back-stack-label">STACK DETECTADO</div><div className="back-stack">{project.stack.map((item) => <span className="stack-chip" key={item}>{item}</span>)}</div>
                           <button className="back-action" type="button" onClick={() => openProject(project)}>Abrir mapa del proyecto <ArrowUpRight size={15} /></button>
-                          <span className="back-watermark">CJ</span>
+                          <span className="back-watermark">K</span>
                         </div>
                       </div>
                     </article>
@@ -241,12 +283,89 @@ function App() {
               </div>
             )}
           </section>
-          <footer className="page-footer"><span><span className="footer-status" /> CeJey lee el workspace en modo local</span><span>HECHO PARA ENTENDER, NO SOLO PARA VER <span className="footer-star">✳</span></span></footer>
-        </div>
+          <footer className="page-footer"><span><span className="footer-status" /> Kaktus lee el workspace en modo local</span><span>HECHO PARA ENTENDER, NO SOLO PARA VER <span className="footer-star">✳</span></span></footer>
+        </div>}
       </main>
       {notice && <div className="notice-toast" role="status" aria-live="polite">{notice}</div>}
     </div>
   );
+}
+
+function App() {
+  const [pathname, setPathname] = useState(() => window.location.pathname);
+  const [dashboardView, setDashboardView] = useState<DashboardView>(() =>
+    window.location.pathname.endsWith("/console") ? "console" : "projects"
+  );
+
+  useEffect(() => {
+    function syncPathname() {
+      const nextPathname = window.location.pathname;
+      setPathname(nextPathname);
+      if (nextPathname.startsWith("/workspaces/demo/dashboard/")) {
+        setDashboardView(nextPathname.endsWith("/console") ? "console" : "projects");
+      }
+    }
+    window.addEventListener("popstate", syncPathname);
+    return () => window.removeEventListener("popstate", syncPathname);
+  }, []);
+
+  function connectDemo() {
+    const dashboardPath = "/workspaces/demo/dashboard/projects";
+    window.history.pushState({}, "", dashboardPath);
+    setDashboardView("projects");
+    setPathname(dashboardPath);
+  }
+
+  function changeDashboardView(view: DashboardView) {
+    const dashboardPath = `/workspaces/demo/dashboard/${view}`;
+    window.history.pushState({}, "", dashboardPath);
+    setDashboardView(view);
+    setPathname(dashboardPath);
+  }
+
+  function openProject(project: Project) {
+    const projectPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}`;
+    window.history.pushState({}, "", projectPath);
+    setPathname(projectPath);
+  }
+
+  function openStudio(project: Project) {
+    const studioPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}/studio/ide`;
+    window.history.pushState({}, "", studioPath);
+    setPathname(studioPath);
+  }
+
+  function backToProject(project: Project) {
+    const projectPath = `/workspaces/demo/projects/${encodeURIComponent(project.id)}`;
+    window.history.pushState({}, "", projectPath);
+    setPathname(projectPath);
+  }
+
+  function backToDashboard() {
+    const dashboardPath = `/workspaces/demo/dashboard/${dashboardView}`;
+    window.history.pushState({}, "", dashboardPath);
+    setPathname(dashboardPath);
+  }
+
+  const projectRoute = pathname.match(/^\/workspaces\/demo\/projects\/([^/]+)(?:\/(studio\/ide))?$/);
+  const projectId = projectRoute ? decodeURIComponent(projectRoute[1]) : null;
+  const studioView = projectRoute?.[2] === "studio/ide";
+
+  if (pathname.startsWith("/workspaces/demo/dashboard/") || projectId) {
+    return (
+      <DashboardScreen
+        projectId={projectId}
+        studioView={studioView}
+        dashboardView={dashboardView}
+        onOpenProject={openProject}
+        onOpenStudio={openStudio}
+        onBackToProject={backToProject}
+        onBackToDashboard={backToDashboard}
+        onChangeDashboardView={changeDashboardView}
+      />
+    );
+  }
+  return <OnboardingScreen onConnectDemo={connectDemo} />;
 }
 
 export default App;
