@@ -18,9 +18,11 @@ Product structure and UX contracts:
 - [SQLite and backend roadmap](./docs/roadmap/sqlite-y-backend.md)
 
 See [Bitacora.md](./Bitacora.md) for implementation history and current status.
-The backend now opens a local SQLite database and applies the initial schema;
-the filesystem remains authoritative, and project metadata is not indexed in
-SQLite yet.
+The local Node.js API uses SQLite for workspace metadata, project snapshots,
+file-tree indexes, and validated UI preferences. The filesystem remains
+authoritative: file contents are read from disk on demand and are never stored
+in SQLite. The API supports explicit workspace rescans; the frontend does not
+yet expose that action or consume the persisted preferences.
 
 ## Run in local development
 
@@ -36,7 +38,7 @@ npm run dev
 ```
 
 Open the Vite URL printed in the frontend terminal. The current API is bound to
-`127.0.0.1:4170`, reads summaries, project trees and selected text files from
-`CaseUses/`, and initializes its SQLite schema under the user data directory.
-File access is read-only and bounded. Persisted scans and preferences are not
-connected yet.
+`127.0.0.1:4170`, initializes SQLite under the user data directory, and reads
+project summaries/trees from the latest successful snapshots. It reads selected
+text files from `CaseUses/` on demand with bounded, read-only access. Workspace
+rescans and workspace/project preferences are available through the API.

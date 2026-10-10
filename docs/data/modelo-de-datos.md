@@ -1,8 +1,8 @@
 # Modelo de datos y persistencia local
 
-**Estado:** esquema inicial, workspace `CaseUses/` y escaneo inicial a SQLite
-implementados; preferencias y endpoints que lean/escriban metadata persistida
-siguen pendientes.
+**Estado:** el workspace `CaseUses/`, escaneo inicial/manual, lectura de
+listado/árbol desde snapshots SQLite y endpoints de preferencias están
+implementados. El frontend aún no consume preferencias ni reescaneo.
 
 ## Decisiones de arquitectura
 
@@ -207,7 +207,13 @@ No modificar a mano una base ya creada ni borrar datos para aplicar un cambio.
   transacción.
 - La primera inicialización registra workspace/origen demo y genera un primer
   escaneo completo. El usuario puede pedir reescaneo; no se hace crawling
-  recursivo en cada petición de lista.
+  recursivo en cada petición de lista. El API local ofrece
+  `POST /api/workspaces/:id/scan` para actualizar el índice explícitamente.
+- Workspace: `GET/PATCH /api/workspaces/:id/preferences`.
+- Proyecto: `GET/PATCH /api/projects/:id/preferences`.
+- Solo se aceptan valores de los catálogos
+  definidos abajo; rutas de archivo deben corresponder a un archivo del último
+  snapshot completo.
 - Ante error de escaneo, conservar el snapshot correcto más reciente y devolver
   el estado de error claramente. No marcar proyectos ausentes con un escaneo
   incompleto.
@@ -230,9 +236,10 @@ ID contra el catálogo al escribir y al leer.
 
 ## Alcance del primer release de persistencia
 
-Incluye esquema y migraciones, registro del workspace demo, escaneo inicial,
-snapshot de proyecto/árbol/tecnologías, endpoints de consulta y actualización de
-preferencias reales. Mantiene filesystem como origen de contenido.
+Incluye esquema y migraciones, registro del workspace demo, escaneo inicial y
+manual, snapshot de proyecto/árbol/tecnologías, endpoints de consulta y
+actualización de preferencias reales. Mantiene filesystem como origen de
+contenido.
 
 No incluye selector de carpeta real, conexión GitHub, cuentas/perfiles,
 sincronización remota, edición de archivos, historial de chat, telemetría ni

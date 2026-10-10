@@ -1,9 +1,8 @@
 # Hoja de ruta: SQLite y backend local
 
-**Estado:** infraestructura SQLite y migración inicial implementadas en
-Linux/WSL; listado, árbol y preferencias aún no están conectados a la persistencia.
-**Objetivo:** pasar de lecturas filesystem directas a un índice local
-reconstruible con preferencias persistentes, sin alterar el flujo visual ni
+**Estado:** API local con snapshots SQLite, reescaneo manual y preferencias
+persistentes implementada en Linux/WSL; aún no está conectada al frontend.
+**Objetivo:** integrar los endpoints con la UI sin cambiar la jerarquía ni
 guardar contenido fuente.
 
 ## Principios de implementación
@@ -68,8 +67,9 @@ Linux/WSL.
   directorios de repositorios elegidos después, sin abrir selector arbitrario
   en esta etapa.
 - El primer arranque crea el workspace y la raíz demo, y guarda un snapshot si
-  todavía no existe uno completo. Los GET existentes siguen leyendo el
-  filesystem; esta etapa no cambia el contrato HTTP.
+  todavía no existe uno completo. En esta etapa, los GET existentes aún leían
+  el filesystem directamente; la migración a lecturas SQLite queda registrada
+  en la etapa 3.
 
 **Pruebas:** snapshot reproducible, fallo a mitad de recorrido, preservación de
 último snapshot exitoso, raíz ausente/inaccesible, ruta ignorada y symlink.
@@ -77,33 +77,39 @@ Linux/WSL.
 **Verificación:** 7 pruebas backend pasan; startup crea SQLite, inicializa el
 workspace demo y conserva los endpoints de lectura actuales.
 
-### 3. Exponer API local de lectura y preferencias — siguiente paso
+### 3. Exponer API local de lectura y preferencias — completada
 
 - Mantener `GET /api/health`, `GET /api/projects`,
   `GET /api/projects/:id/tree` y `GET /api/projects/:id/file?path=...` durante
   la transición.
-- Hacer que listado y árbol lean metadata/index de SQLite; lectura de archivo
-  sigue consultando el filesystem real y revalida path, symlink, tipo y límite
-  de tamaño.
-- Añadir endpoint explícito de reescaneo para el workspace demo, por ejemplo
-  `POST /api/workspaces/:id/scan`; validar el ID y responder estado/resultado,
-  no contenido ficticio.
-- Añadir `GET/PATCH /api/workspaces/:id/preferences` y
-  `GET/PATCH /api/projects/:id/preferences`; aceptar solo IDs de vista/orden
-  permitidos, validando propiedad y rutas relativas del archivo.
+- **Completado:** listado y árbol consultan el último snapshot exitoso de
+  SQLite; aceptan el ID persistente y el alias de ruta actual, y mantienen la
+  forma de respuesta que usa el frontend. La lectura del contenido de archivo
+  sigue consultando el filesystem real y revalida ruta, symlink, tipo y tamaño.
+- **Completado:** `POST /api/workspaces/:id/scan` ejecuta reescaneo explícito
+  del origen local del workspace, devuelve conteo y estado completo/parcial,
+  y responde error explícito si la raíz no está disponible. No expone rutas
+  absolutas.
+- **Completado:** `GET/PATCH /api/workspaces/:id/preferences` y
+  `GET/PATCH /api/projects/:id/preferences`; catálogos cerrados, PATCH parcial,
+  validación de `selected_file_path` contra el último snapshot y defaults
+  `null` para preferencias aún no guardadas.
 - Respuestas de error con status y mensajes consistentes; no exponer paths
   absolutos ni stack traces al cliente. El log local debe evitar secretos.
-- Vincular `GET /api/health` al estado del proceso/DB sin revelar ubicación
-  sensible.
+- **Completado:** `GET /api/health` verifica una consulta SQLite y devuelve
+  `503` genérico si la base no está disponible.
 
-**Pruebas:** contrato HTTP, input inválido, entidades desconocidas, preferencias
-válidas/invalidas, DB inaccesible, lectura de archivo que cambió luego del
-escaneo y traversal/symlink.
+**Verificación:** pruebas HTTP de catálogo permitido/denegado, persistencia,
+proyecto/workspace desconocido, tipo de contenido, ruta relativa, health y
+endpoints de lectura/reescaneo. Lectura de rutas presentes solo en el índice
+confirma que se vuelve a validar contra el filesystem y no entrega contenido
+inexistente. La simulación de DB inaccesible para health queda como cobertura
+adicional, no como bloqueo del contrato.
 
 ### 4. Conectar el frontend sin cambiar la jerarquía
 
-- Sustituir progresivamente carga del listado/tree por el contrato persistido;
-  conservar Proyectos/Consola como dos vistas del mismo conjunto.
+- Conectar preferencias y reescaneo explícito en frontend; conservar
+  Proyectos/Consola como dos vistas del mismo conjunto.
 - Resolver la diferencia entre los IDs/rutas actuales basados en nombre de
   carpeta (`01-mini-store`) y el UUID persistido: durante la transición, aceptar
   los identificadores actuales como alias resolubles por origen/ruta; generar
@@ -115,8 +121,8 @@ escaneo y traversal/symlink.
   filesystem.
 - Presentar estado de escaneo y acción de actualizar; distinguir último índice
   correcto de un fallo de actualización.
-- Mantener mock de onboarding/Git, salud, chat, terminal y Multipista; no guardar
-  sus datos.
+- Mantener mock de onboarding/Git, monitores visuales de salud, chat, terminal
+  y Multipista; no guardar esos datos.
 
 **Pruebas:** navegación existente, URL directa/atrás-adelante, preferencias,
 reapertura de proyecto, archivo desaparecido, carga/error/vacío y responsive.
@@ -204,8 +210,7 @@ Después de cerrar el MVP local:
 
 ## Siguiente paso inmediato
 
-Implementar únicamente la etapa 2: seed demo y servicio de escaneo transaccional
-Implementar la etapa 3: endpoints de lectura basados en el índice y preferencias
-persistentes, manteniendo la lectura del contenido de archivos directamente
-desde el filesystem. Antes de migrar listado/árbol a SQLite, definir el contrato
-HTTP y probarlo sin conectar todavía el frontend.
+Implementar las preferencias de workspace/proyecto con validación estricta,
+pruebas HTTP y persistencia SQLite. Después conectar el frontend a reescaneo y
+preferencias, y validar que URL y jerarquía de vistas sigan gobernando la
+navegación.

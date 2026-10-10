@@ -133,22 +133,29 @@ la interfaz principal de Kaktus.
 
 ### Backend
 
-`backend/server.js` expone:
+Backend Node.js local, API HTTP nativa, `better-sqlite3` y filesystem como
+fuente de verdad. SQLite persiste el workspace demo y snapshots reconstruibles;
+no guarda contenido de archivos. La API escucha en `127.0.0.1:4170`.
 
-- `GET /api/health`: verificación básica.
-- `GET /api/projects`: lee las carpetas directas de `CaseUses/` y resume cada
-  proyecto.
+Endpoints actuales:
 
-El resumen incluye id/carpeta, nombre derivado del README, descripción, número
-de archivos y subcarpetas, tipo general y stack aproximado. Los directorios
-pesados o generados —por ejemplo `node_modules`, `dist`, `build`, `.git` y
-`coverage`— se omiten. Se ignoran enlaces simbólicos para evitar seguir rutas
-fuera del workspace. El servicio se enlaza a `127.0.0.1:4170`, no escribe en los
-proyectos y solo entrega metadatos del contenido.
+- `GET /api/health`: verifica que SQLite responda; devuelve estado genérico sin
+  revelar rutas locales.
+- `GET /api/projects`: obtiene resumen y tecnologías desde el snapshot completo
+  más reciente.
+- `GET /api/projects/:id/tree`: obtiene el árbol del snapshot; acepta UUID
+  persistente y alias de ruta de carpeta para compatibilidad.
+- `GET /api/projects/:id/file?path=...`: lee el archivo real en modo solo
+  lectura, validando traversal, symlinks, tipo y límite de tamaño.
+- `POST /api/workspaces/:id/scan`: reescaneo local explícito; un error parcial
+  conserva el último snapshot exitoso.
+- `GET/PATCH /api/workspaces/:id/preferences` y
+  `GET/PATCH /api/projects/:id/preferences`: lectura/escritura parcial con
+  catálogos cerrados; rutas de archivo se validan contra el último snapshot.
 
-El stack es una primera heurística, no un análisis semántico: combina
-extensiones, dependencias de `package.json` y unas señales explícitas para los
-demos. Revisarlo/mejorarlo será parte del futuro análisis.
+Los endpoints de lectura y preferencias tienen cobertura de integración HTTP
+con base aislada. El frontend consume listado, árbol y lectura de archivo; aún
+no está conectado al reescaneo ni a preferencias.
 
 ### Frontend
 
